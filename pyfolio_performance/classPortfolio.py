@@ -10,6 +10,10 @@ class Portfolio:
     :type filename: str
     """
 
+    TRANSACTION_ALL = "all"
+    TRANSACTION_DEPOT = "depot"
+    TRANSACTION_ACCOUNT = "account"
+
     parent_map = {}
     uuid_map = {}
     path_map = {}
@@ -27,6 +31,7 @@ class Portfolio:
         # Ensuring every reference is resolved
         for dep in self.depotList:
             dep.resolveReference()
+            dep.clearDuplicateTransactions()
         for acc in self.accList:
             acc.resolveReference()
 
@@ -132,7 +137,7 @@ class Portfolio:
                 val += secVals[theSecurity]
         return val
 
-    def getTotalTransactions(self):
+    def getTotalTransactions(self, transactionType):
         """
         Returns the list of all transactions in the portfolio across all depots and accounts.
 
@@ -140,10 +145,12 @@ class Portfolio:
         :type: list(Transaction)
         """
         totalTransactions = []
-        for depot in self.getDepots():
-            totalTransactions.extend(depot.getTransactions())
-        for acc in self.getAccounts():
-            totalTransactions.extend(acc.getTransactions())
+        if transactionType == Portfolio.TRANSACTION_DEPOT or transactionType == Portfolio.TRANSACTION_ALL:
+            for depot in self.getDepots():
+                totalTransactions.extend(depot.getTransactions())
+        if transactionType == Portfolio.TRANSACTION_ACCOUNT or transactionType == Portfolio.TRANSACTION_ALL:
+            for acc in self.getAccounts():
+                totalTransactions.extend(acc.getTransactions())
         return totalTransactions
 
     def getInvestmentInto(self, security, before=None):
@@ -165,7 +172,7 @@ class Portfolio:
 
         return clusters['value']
 
-    def evaluateCluster(self, clusters, fn_filter, fn_getClusterId, fn_aggregation):
+    def evaluateCluster(self, clusters, fn_filter, fn_getClusterId, fn_aggregation, transactionType=TRANSACTION_ALL):
         """
         Evaluates all transactions of the portfolio as follows.
         Every transaction that is successfully filtered by fn_filter, gets put in a cluster through fn_getClusterId.
@@ -182,11 +189,13 @@ class Portfolio:
 
         :parameter fn_aggregation: The aggregation function that combines cluster values. This updates the cluster itself at the position cluster-id for every considered transaction.
         :type fn_aggregation: function(v, Transaction) -> v
+        
+        :parameter transactionType: The type of transaction to consider. Default is TRANSACTION_ALL. Options are TRANSACTION_DEPOT and TRANSACTION_ACCOUNT.
 
         :return: Nothing is returned.
         :type: None
         """
-        for transact in self.getTotalTransactions():
+        for transact in self.getTotalTransactions(transactionType):
             if not fn_filter(transact):
                 continue
             clusterId = fn_getClusterId(clusters, transact)
