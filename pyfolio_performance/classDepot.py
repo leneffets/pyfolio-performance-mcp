@@ -90,6 +90,22 @@ class Depot(PortfolioPerformanceObject):
         
         return self.depotSecurities
 
+    def clearDuplicateTransactions(self):
+        """
+        This method is used to remove duplicate transactions from the depot.
+        """
+        # print("Clearing duplicates from %s" % self)
+        # print(len(self.transactions))
+        existingReference = []
+        newTransactions = []
+        for transaction in self.transactions:
+            if not transaction.content['referencePath'] in existingReference:
+                newTransactions.append(transaction)
+                existingReference.append(transaction.content['referencePath'])
+        # print(len(newTransactions))
+        self.transactions = newTransactions
+        # print()
+
     @staticmethod
     def parse(content):
         if "@reference" in content.keys():
