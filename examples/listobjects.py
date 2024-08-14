@@ -1,4 +1,4 @@
-from pyfolio_performance import Portfolio
+from pyfolio_performance import Portfolio, Security
 
 portPerf = Portfolio("02_portfolio.xml")
 
@@ -35,11 +35,19 @@ for transaction in acc.getTransactions():
 print()
 
 
-print("New purchases in ")
+# print("New purchases in ")
 # def filter_month(entry, month, year):
 #     if entry.getYear() != year or month != entry.getMonth():
 #         return False
 #     return True
+# print()
+
+isin = "GB0007980591" # BP PLC
+print(f"Getting shares for ISIN {isin}")
+sec = Security.getSecurityByIsin(isin)
+print(f"Got security: {sec}")
+shares = portPerf.getShares(sec)
+print("Shares: " + str(shares))
 print()
 
 # print("Securities:")
