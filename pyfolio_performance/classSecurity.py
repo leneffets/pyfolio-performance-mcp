@@ -14,7 +14,7 @@ class Security(PortfolioPerformanceObject):
     pricescale = 1000000 # scale factor to reach euro value
     
     def __init__(self, data): #, name, isin, wkn):
-        self._attributeList = ['uuid', 'name', 'currencyCode', 'isin', 'tickerSymbol', 'wkn', 'feed']
+        self._attributeList = ['uuid', 'name', 'currencyCode', 'isin', 'tickerSymbol', 'wkn', 'feed']        
         self.data = data
         self.name = data["name"]
         self.logo = None
@@ -104,8 +104,7 @@ class Security(PortfolioPerformanceObject):
         :return: existing security object or None 
         :type: Security
         """
-        return Security.getObjectByAttribute('name', name)
-        # return Security._getSecurityByMap(Security.securityNameMap, name)
+        return Security.securityNameMap.get(name)
 
     @staticmethod
     def getSecurityByIsin(isin):
@@ -116,8 +115,7 @@ class Security(PortfolioPerformanceObject):
         :return: existing security object or None 
         :type: Security
         """
-        return Security.getObjectByAttribute('isin', isin)
-        # return Security._getSecurityByMap(Security.securityIsinMap, isin)
+        return Security.securityIsinMap.get(isin)
 
     @staticmethod
     def getSecurityByWkn(wkn):
@@ -128,8 +126,7 @@ class Security(PortfolioPerformanceObject):
         :return: existing security object or None 
         :type: Security
         """
-        return Security.getObjectByAttribute('wkn', wkn)
-        # return Security._getSecurityByMap(Security.securityWknMap, wkn)
+        return Security.securityWknMap.get(wkn)
 
     @staticmethod
     def parseContent(data):
