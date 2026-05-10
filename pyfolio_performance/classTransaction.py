@@ -79,6 +79,8 @@ class Transaction(PortfolioPerformanceObject):
         """
         return self._account.name
 
+    scale = 100
+
     def getValue(self):
         try:
             val = int(self.content["amount"])
@@ -86,9 +88,11 @@ class Transaction(PortfolioPerformanceObject):
                 val = -val
             elif self.type not in Transaction.positive:
                 val = self.getSecurityBasedValue()
-        except AttributeError:
+            return val
+        except (KeyError, AttributeError, ValueError) as e:
+            print(f"Error getting value for transaction: {e}")
             print(self.content)
-        return val
+            return 0
 
     def getSecurityBasedValue(self):
         if self.type not in Transaction.positiveDepot and self.type not in Transaction.negativeDepot:
@@ -96,10 +100,16 @@ class Transaction(PortfolioPerformanceObject):
         return self.getShares() * self.getSecurity().getMostRecentValue()
 
     def getAmount(self):
-        return int(self.content["amount"])
+        try:
+            return int(self.content["amount"])
+        except (KeyError, ValueError):
+            return 0
 
     def getShares(self):
-        return int(self.content["shares"])
+        try:
+            return int(self.content["shares"])
+        except (KeyError, ValueError):
+            return 0
 
     def getYear(self):
         """

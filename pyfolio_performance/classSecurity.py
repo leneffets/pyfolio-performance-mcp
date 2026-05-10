@@ -11,7 +11,7 @@ class Security(PortfolioPerformanceObject):
     securityWknMap = {}
     securityNums = {}
     mostRecentValue = None
-    pricescale = 1000000 # scale factor to reach euro value
+    pricescale = 1000000 # scale factor to reach euro value in cents
     
     def __init__(self, data): #, name, isin, wkn):
         self._attributeList = ['uuid', 'name', 'currencyCode', 'isin', 'tickerSymbol', 'wkn', 'feed']        
@@ -35,17 +35,24 @@ class Security(PortfolioPerformanceObject):
         """
         if self.logo != None:
             return self.logo
-        
+
         try:
-            attributes = self.data["attributes"]["map"]["entry"]
-            
-            for string in attributes["string"]:
-                if string == "logo":
-                    continue
-                self.logo = string
-        except: # might have some None in there if no logo exists
+            attributes = self.data.get("attributes", {}).get("map", {}).get("entry")
+            if attributes is None:
+                return None
+
+            string_list = attributes.get("string", [])
+            if isinstance(string_list, list):
+                for string in string_list:
+                    if string == "logo":
+                        continue
+                    self.logo = string
+            elif isinstance(string_list, str):
+                if string_list != "logo":
+                    self.logo = string_list
+        except (KeyError, TypeError):
             pass
-            
+
         return self.logo
 
     def getSecurityByNum(num: int) -> 'Security':
@@ -58,11 +65,20 @@ class Security(PortfolioPerformanceObject):
         """
         if self.mostRecentValue != None:
             return self.mostRecentValue
-        
-        priceList = self.data["prices"]['price']
-        if priceList == None:
+
+        prices = self.data.get("prices")
+        if prices is None:
             print("No price list found for %s" % str(self))
             return 0
+
+        priceList = prices.get("price")
+        if priceList is None:
+            print("No price list found for %s" % str(self))
+            return 0
+
+        if isinstance(priceList, dict):
+            priceList = [priceList]
+
         newestDate = DateObject("0000-00-00")
         newestXml = None
         

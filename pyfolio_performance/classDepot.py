@@ -121,6 +121,9 @@ class Depot(PortfolioPerformanceObject):
         return rslt
     
     def _parseTransactions(self, content):
+        if content.get('transactions') is None:
+            return
+
         num = 1
         for transact in content['transactions']['portfolio-transaction']:
             transact['depot'] = self

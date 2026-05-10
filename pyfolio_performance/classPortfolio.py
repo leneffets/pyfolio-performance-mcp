@@ -20,7 +20,8 @@ class Portfolio:
 
     def __init__(self, filename):
         Portfolio.currentPortfolio = self
-        xml_content = open(filename, 'r').read()
+        with open(filename, 'r') as f:
+            xml_content = f.read()
         self.content = xmltodict.parse(xml_content)
 
         self._parseSecurities() # needs to be done first, other parsing could depend on it being done 
@@ -157,7 +158,7 @@ class Portfolio:
         """
         Computes how much is invested into a specific security before a given date. If no date is given, the total investment is calculated.
 
-        :return: value in cents of investement
+        :return: value in cents of investment
         :type: int
         """
 

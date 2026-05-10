@@ -61,8 +61,20 @@ class Account(PortfolioPerformanceObject):
         return rslt
     
     def _parseTransactions(self, content):
+        if content.get('transactions') is None:
+            return
+
+        txs = content['transactions'].get('account-transaction')
+        if txs is None:
+            return
+
+        if isinstance(txs, dict):
+            txs = [txs]
+
         num = 1
-        for transact in content['transactions']['account-transaction']:
+        for transact in txs:
+            if "@reference" in transact:
+                continue
             transact['account'] = self
             
             transact['referencePath'] = content['referencePath'] + '/transactions/account-transaction'
