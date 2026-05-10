@@ -15,11 +15,14 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 # This call to setup() does all the work
 setup(
     name="pyfolio-performance",
-    version="0.2.5",
-    description="Portfolio Performance library",
+    version="0.3.0",
+    description="Python library + MCP server for Portfolio Performance XML files",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://pyfolio-performance.readthedocs.io/",
+    url="https://github.com/leneffets/pyfolio-performance-mcp",
+    project_urls={
+        "Bug Tracker": "https://github.com/leneffets/pyfolio-performance-mcp/issues",
+    },
     author="Fabian Bendun",
     author_email="pyfolio-performance@bendun.io",
     license="MIT",
@@ -28,12 +31,14 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Operating System :: OS Independent"
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Operating System :: OS Independent",
+        "Topic :: Office/Business :: Financial",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
+    keywords="portfolio-performance mcp investment finance trading etf stocks",
     packages=["pyfolio_performance"],
     include_package_data=True,
     install_requires=["xmltodict"]

@@ -1,6 +1,13 @@
 # pyfolio-performance
 
-A python library to read Portfolio Performance XML files.
+Python library + MCP server to read Portfolio Performance XML files. Access your portfolio data via AI agents for investment analysis.
+
+## Features
+
+- Parse Portfolio Performance XML export files
+- Access accounts, depots, securities, transactions
+- MCP server for AI agents (Claude Desktop, Cursor, OpenCode, kiro-cli)
+- Price history tracking
 
 ## Installation
 
