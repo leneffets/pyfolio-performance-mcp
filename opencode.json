@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "portfolio": {
+      "type": "local",
+      "command": ["./venv/bin/python", "mcp_server.py"],
+      "environment": {
+        "PORTFOLIO_FILE": "kommer.xml"
+      },
+      "enabled": true
+    }
+  }
+}
