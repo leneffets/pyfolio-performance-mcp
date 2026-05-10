@@ -1,6 +1,28 @@
 # Fixes Applied
 
-## 8 Bug Fixes
+## 9 Bug Fixes
+
+### 10. classAccount.py - CSV reference resolution
+**Line ~100-127** - Fixed path construction for resolving @reference attributes in CSV imports.
+
+```python
+def _resolveReferencedTransactions(self):
+    base_path = 'client/accounts/account/transactions/account-transaction'
+    # Fixed: explicitly build from ['client', 'accounts', 'account', 'transactions', 'account-transaction']
+    # instead of broken path calculation
+    abs_parts = ['client', 'accounts', 'account', 'transactions', 'account-transaction']
+```
+
+**Also**: classTransaction.py:7 - Added `TAX_REFUND` to `positive` list.
+
+```python
+positive = ['INTEREST', 'DEPOSIT', 'TRANSFER_IN', 'DIVIDENDS', 'SELL', 'FEES_REFUND', 'TAX_REFUND']
+```
+
+Without this, TAX_REFUND fell through to `getSecurityBasedValue()` which failed (no security), causing:
+- 27 CSV-referenced transactions not being resolved
+- Balance off by 7 cents (566.10 vs 566.17 EUR)
+- Error messages in output
 
 ### 9. classPortfolio.py - Single item handling (dict vs list)
 **Line ~39, 49, 70** - When only 1 security/account/depot exists, xmltodict returns dict not list.

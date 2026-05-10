@@ -4,7 +4,7 @@ import re
 class Transaction(PortfolioPerformanceObject):
 
     negative = ['TRANSFER_OUT', 'REMOVAL', 'INTEREST_CHARGE', 'FEES', 'TAXES', 'BUY']
-    positive = ['INTEREST', 'DEPOSIT', 'TRANSFER_IN', 'DIVIDENDS', 'SELL', 'FEES_REFUND']
+    positive = ['INTEREST', 'DEPOSIT', 'TRANSFER_IN', 'DIVIDENDS', 'SELL', 'FEES_REFUND', 'TAX_REFUND']
 
     negativeDepot = ["DELIVERY_OUTBOUND", "SELL", "TRANSFER_OUT"]
     positiveDepot = ["BUY", "DELIVERY_INBOUND", "TRANSFER_IN"]
@@ -90,13 +90,9 @@ class Transaction(PortfolioPerformanceObject):
                 val = self.getSecurityBasedValue()
             return val
         except (KeyError, AttributeError, ValueError) as e:
-            print(f"Error getting value for transaction: {e}")
-            print(self.content)
             return 0
 
     def getSecurityBasedValue(self):
-        if self.type not in Transaction.positiveDepot and self.type not in Transaction.negativeDepot:
-            print(self.type, int(self.content["amount"]))
         return self.getShares() * self.getSecurity().getMostRecentValue()
 
     def getAmount(self):
@@ -185,8 +181,6 @@ class Transaction(PortfolioPerformanceObject):
         val = int(self.content["shares"])
         if self.type in Transaction.negativeDepot:
             val = -val
-        elif self.type not in Transaction.positiveDepot:
-            print(self.type, val)
         return (self.security, val)
 
     #   {

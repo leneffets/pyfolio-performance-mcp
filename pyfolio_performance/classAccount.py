@@ -74,9 +74,11 @@ class Account(PortfolioPerformanceObject):
         num = 1
         for transact in txs:
             if "@reference" in transact:
+                num += 1
                 continue
+
             transact['account'] = self
-            
+
             transact['referencePath'] = content['referencePath'] + '/transactions/account-transaction'
             if num > 1:
                 transact['referencePath'] += '[%d]' % num
@@ -88,9 +90,40 @@ class Account(PortfolioPerformanceObject):
     
     def resolveReference(self):
         super().resolveReference()
-        
+
         for transaction in self.transactions:
             transaction.resolveReference()
+
+        
+        self._resolveReferencedTransactions()
+
+    def _resolveReferencedTransactions(self):
+        base_path = 'client/accounts/account/transactions/account-transaction'
+        txs = self.content.get('transactions', {}).get('account-transaction', [])
+
+        added = 0
+        for i, transact in enumerate(txs):
+            if "@reference" in transact:
+                try:
+                    ref_path = transact.get('@reference', '')
+                    if ref_path and ref_path.startswith('../'):
+                        parts = ref_path.split('/')
+                        abs_parts = ['client', 'accounts', 'account', 'transactions', 'account-transaction']
+                        for part in parts:
+                            if part == '..':
+                                if len(abs_parts) > 1:
+                                    abs_parts.pop()
+                            else:
+                                abs_parts.append(part)
+                        abs_path = '/'.join(abs_parts)
+                        resolved = Portfolio.currentPortfolio.getObjectByPath(abs_path)
+                        if resolved and hasattr(resolved, 'setAccount'):
+                            resolved.setAccount(self)
+                            if resolved not in self.transactions:
+                                self.transactions.append(resolved)
+                                added += 1
+                except Exception:
+                    pass
 
 
     def __repr__(self) -> str:
