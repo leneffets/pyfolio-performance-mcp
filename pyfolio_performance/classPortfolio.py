@@ -39,7 +39,12 @@ class Portfolio:
     def _parseSecurities(self):
         self.securityList = []
         num = 0
-        for sec in self.content['client']['securities']['security']:
+        securities = self.content['client']['securities']['security']
+
+        if isinstance(securities, dict):
+            securities = [securities]
+
+        for sec in securities:
             sec['num'] = num
             secObj = Security.parseContent(sec)
             self.uuid_map[sec['uuid']] = secObj
@@ -48,10 +53,15 @@ class Portfolio:
 
     def _parseAccounts(self):
         self.accList = []
-        
+
         num = 1
         refPath = 'client/accounts/account'
-        for acc in self.content['client']['accounts']['account']:
+        accounts = self.content['client']['accounts']['account']
+
+        if isinstance(accounts, dict):
+            accounts = [accounts]
+
+        for acc in accounts:
             acc['referencePath'] = refPath
             if num > 1:
                 acc['referencePath'] += "[%d]" % num
@@ -64,17 +74,22 @@ class Portfolio:
 
     def _parseDepots(self):
         self.depotList = []
-        
+
         num = 1
         refPath = 'client/portfolios/portfolio'
-        for dep in self.content['client']['portfolios']['portfolio']:
+        depots = self.content['client']['portfolios']['portfolio']
+
+        if isinstance(depots, dict):
+            depots = [depots]
+
+        for dep in depots:
             dep['referencePath'] = refPath
             if num > 1:
                 dep['referencePath'] += "[%d]" % num
             currentDepot = Depot.parse(dep)
             self.depotList.append(currentDepot)
             num += 1
-            
+
         for dep in self.depotList:
             dep.resolveReference()
 

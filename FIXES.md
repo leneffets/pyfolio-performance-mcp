@@ -1,6 +1,26 @@
 # Fixes Applied
 
-## 7 Bug Fixes
+## 8 Bug Fixes
+
+### 9. classPortfolio.py - Single item handling (dict vs list)
+**Line ~39, 49, 70** - When only 1 security/account/depot exists, xmltodict returns dict not list.
+
+```python
+# Fix for securities
+securities = self.content['client']['securities']['security']
+if isinstance(securities, dict):
+    securities = [securities]
+
+# Fix for accounts
+accounts = self.content['client']['accounts']['account']
+if isinstance(accounts, dict):
+    accounts = [accounts]
+
+# Fix for depots
+depots = self.content['client']['portfolios']['portfolio']
+if isinstance(depots, dict):
+    depots = [depots]
+```
 
 ### 1. classDepot.py - Null check for transactions
 **Line ~123** - Portfolio without transactions caused crash.
