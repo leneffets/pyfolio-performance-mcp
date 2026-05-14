@@ -13,9 +13,8 @@ class CrossEntry(PortfolioPerformanceObject):
                 CrossEntry.crossEntry_portfolioTransfer(nextEntry)
             elif nextEntry.content['@class'] == "buysell":
                 CrossEntry.crossEntry_buysell(nextEntry)
-            else:
-                pass # still open to handle class="account-transfer"
-                # print("Cant handle crossEntry class", nextEntry.attrib['class'])
+            elif nextEntry.content['@class'] == "account-transfer":
+                CrossEntry.crossEntry_accountTransfer(nextEntry)
 
     @staticmethod
     def crossEntry_buysell(nextEntry):
@@ -42,6 +41,33 @@ class CrossEntry(PortfolioPerformanceObject):
         otherDepot.resolveReference()
         transactionFrom.resolveReference()
         otherDepot.transactions.append(transactionFrom)
+
+    @staticmethod
+    def crossEntry_accountTransfer(nextEntry):
+        acct_from = nextEntry.content.get("accountFrom")
+        acct_to = nextEntry.content.get("accountTo")
+        tx_from = nextEntry.content.get("transactionFrom")
+        tx_to = nextEntry.content.get("transactionTo")
+
+        def _already_exists(tx, account):
+            for existing in account.transactions:
+                if (str(existing.getDate()) == str(tx.getDate())
+                        and existing.type == tx.type
+                        and existing.getValue() == tx.getValue()):
+                    return True
+            return False
+
+        if acct_from and tx_from:
+            acct_from.resolveReference()
+            tx_from.resolveReference()
+            if not _already_exists(tx_from, acct_from):
+                acct_from.transactions.append(tx_from)
+
+        if acct_to and tx_to:
+            acct_to.resolveReference()
+            tx_to.resolveReference()
+            if not _already_exists(tx_to, acct_to):
+                acct_to.transactions.append(tx_to)
 
 
     @staticmethod

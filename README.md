@@ -91,25 +91,23 @@ The server auto-loads the portfolio on startup from:
 
 | Tool | Description |
 |------|-------------|
-| `ping` | Health check - verify server is running |
+| `ping` | Health check — verify server is running |
 | `load_portfolio` | Load a portfolio XML file |
 | `reload_portfolio` | Reload current portfolio without restart |
-| `get_portfolio_summary` | Quick overview: total value, P/L, counts |
-| `get_accounts` | All accounts with balances |
-| `get_depots` | All depots with securities |
-| `get_securities` | All securities in portfolio |
-| `get_all_transactions` | All transactions |
+| `get_portfolio_summary` | Full overview: cash, depot values, P/L, per-account and per-depot breakdowns with invested/profit and full holdings |
+| `get_accounts` | All accounts with cash balances |
 | `get_account_by_name` | Single account by name |
+| `get_depots` | All depots with full security holdings |
 | `get_depot_by_name` | Single depot by name |
-| `get_security_by_name` | Find security by name |
-| `get_security_by_isin` | Find security by ISIN |
-| `get_security_by_wkn` | Find security by WKN |
+| `get_securities` | All securities with ISIN, WKN, price, value |
+| `get_securities_with_values` | Holdings sorted by value descending |
+| `get_transactions` | All transactions with depot and account info |
 | `get_transactions_by_type` | Filter by type (BUY, SELL, DIVIDENDS, etc.) |
 | `get_transactions_by_year` | Filter by year |
-| `get_transactions_for_security` | All trades for a security |
-| `get_securities_with_values` | Securities with current values |
-| `get_performance_by_year` | Yearly totals by transaction type |
-| `get_security_price_history` | Historical price data for a security |
+| `get_transactions_for_security` | Filter by security, optionally by depot and type |
+| `get_security_by_name` / `by_isin` / `by_wkn` | Look up a security |
+| `get_security_price_history` | Historical daily closing prices |
+| `get_performance_by_year` | Yearly totals grouped by transaction type |
 
 ### OpenCode Integration
 
@@ -140,3 +138,7 @@ Then run opencode from the project directory. The portfolio auto-loads on startu
 ## Docs
 
 https://pyfolio-performance.readthedocs.io/en/latest/
+
+## Changelog
+
+See [FIXES.md](FIXES.md) for a record of bugs fixed in this fork.

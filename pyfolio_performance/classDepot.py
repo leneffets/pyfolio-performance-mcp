@@ -51,19 +51,13 @@ class Depot(PortfolioPerformanceObject):
     @staticmethod
     def getDepotByName(name):
         """
-        If no such Depot exists, it returns an empty depot with the name.
-        If it exists, it returns the corresponding Depot.
-
         :param: Name of the depot that should be returned
         :type: str
 
-        :return: Existing or new Depot
-        :type: Depot
+        :return: Existing Depot or None
+        :type: Depot | None
         """
-        if name in Depot.depotMap.keys():
-            return Depot.depotMap[name]
-
-        return Depot(name, None)
+        return Depot.depotMap.get(name)
 
     def getSecurities(self):
         """

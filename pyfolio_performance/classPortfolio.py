@@ -180,7 +180,7 @@ class Portfolio:
         clusters = {'value': 0}
         myFilter = Filters.fSecurityTransaction(security)
         if before != None:
-            myFilter = Filters.fAnd(myFilter, Filters)
+            myFilter = Filters.fAnd(myFilter, Filters.fDate(before, None))
 
         def fn_cluster(x, y): return 'value'
         def fn_aggregate(x, y): return x+y.getValue()

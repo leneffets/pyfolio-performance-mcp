@@ -1,6 +1,56 @@
 # Fixes Applied
 
-## 9 Bug Fixes
+## 10 Bug Fixes
+
+### 11. classCrossEntry.py - Missing account-transfer handler
+**Line ~16-17** - Account-transfer crossEntries were completely skipped, causing
+cross-account transfers to only record one side.
+
+The `processCrossEntries()` method had:
+```python
+else:
+    pass  # still open to handle class="account-transfer"
+```
+
+This meant mirror transactions (e.g., `transactionTo` or `transactionFrom` inside
+the crossEntry) were parsed as Transaction objects but never added to the
+counterparty account's transaction list.
+
+**Impact**: Trade Republic account balance read €48,784.04 instead of €33,982.97
+— off by 4 missing TRANSFER transactions (3 TRANSFER_IN, 1 TRANSFER_OUT).
+
+**Fix**: Replaced the `pass` with a call to `CrossEntry.crossEntry_accountTransfer()`
+that resolves the counterparty account and appends the mirror transaction.
+Dedup by `(date, type, amount)` prevents double-adding.
+
+```python
+@staticmethod
+def crossEntry_accountTransfer(nextEntry):
+    acct_from = nextEntry.content.get("accountFrom")
+    acct_to = nextEntry.content.get("accountTo")
+    tx_from = nextEntry.content.get("transactionFrom")
+    tx_to = nextEntry.content.get("transactionTo")
+
+    def _already_exists(tx, account):
+        for existing in account.transactions:
+            if (str(existing.getDate()) == str(tx.getDate())
+                    and existing.type == tx.type
+                    and existing.getValue() == tx.getValue()):
+                return True
+        return False
+
+    if acct_from and tx_from:
+        acct_from.resolveReference()
+        tx_from.resolveReference()
+        if not _already_exists(tx_from, acct_from):
+            acct_from.transactions.append(tx_from)
+
+    if acct_to and tx_to:
+        acct_to.resolveReference()
+        tx_to.resolveReference()
+        if not _already_exists(tx_to, acct_to):
+            acct_to.transactions.append(tx_to)
+```
 
 ### 10. classAccount.py - CSV reference resolution
 **Line ~100-127** - Fixed path construction for resolving @reference attributes in CSV imports.
