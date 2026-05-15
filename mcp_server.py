@@ -109,13 +109,14 @@ def ping() -> dict:
 
 @mcp.tool
 def load_portfolio(file_path: str | None = None) -> dict:
-    """Load a Portfolio Performance XML file.
+    """Load a Portfolio Performance export file.
 
     Clears any previously loaded portfolio and loads a new one.
     If no path is given, falls back to PORTFOLIO_FILE env var or "kommer.xml".
 
     Args:
-        file_path: Absolute or relative path to the XML export file.
+        file_path: Absolute or relative path to a Portfolio Performance
+                   XML export.
 
     Returns:
         message: confirmation with the loaded filename
@@ -128,9 +129,9 @@ def load_portfolio(file_path: str | None = None) -> dict:
 
 @mcp.tool
 def reload_portfolio() -> dict:
-    """Reload the current portfolio XML from disk without restarting the server.
+    """Reload the current portfolio from disk without restarting the server.
 
-    Useful after the XML file has been updated externally.
+    Useful after the source file has been updated externally.
     Requires a portfolio to be loaded first.
 
     Returns:
@@ -146,24 +147,28 @@ def reload_portfolio() -> dict:
 def get_portfolio_summary() -> dict:
     """Quick financial overview — total assets, cash, depot value, and P/L.
 
-    Computes:
-    - Sum of all account cash balances
-    - Sum of all security holdings at current market prices
-    - Net money paid in (deposits minus removals)
-    - Overall profit/loss (total assets minus net pay-in)
-    - Per-account cash breakdown
-    - Per-depot breakdown with invested amount, profit, and full holdings
+    Notes on interpretation:
+    - total_payin_eur counts ONLY DEPOSIT, TRANSFER_IN, REMOVAL, TRANSFER_OUT.
+      Dividends, interest, tax refunds, and fees are not pay-in. As a
+      consequence, profit_loss_eur (= total_assets_eur - total_payin_eur)
+      is NOT pure capital gain — it also includes accumulated dividends,
+      interest, and FX effects.
+    - Cash balances are summed in each account's native currency without
+      FX conversion. The "_eur" suffix is a label; verify all accounts are
+      EUR via get_accounts() if in doubt.
+    - Cash held outside Portfolio Performance (e.g. separate savings
+      accounts not tracked here) is NOT included.
 
     Returns:
-        total_cash_eur: cash held across all accounts
-        depot_value_eur: securities at current market value
-        total_assets_eur: cash + depot value
-        total_payin_eur: net money deposited (DEPOSIT + TRANSFER_IN - REMOVAL - TRANSFER_OUT)
-        profit_loss_eur: total_assets - total_payin
+        total_cash_eur: sum of all account balances (no FX conversion)
+        depot_value_eur: sum of holdings at current market price
+        total_assets_eur: total_cash_eur + depot_value_eur
+        total_payin_eur: DEPOSIT + TRANSFER_IN - REMOVAL - TRANSFER_OUT
+        profit_loss_eur: total_assets_eur - total_payin_eur
         account_count: number of accounts
         depot_count: number of depots
         security_count: number of unique securities held
-        accounts: list of {name, balance_eur} — every cash account
+        accounts: list of {name, balance_eur}
         depots: list of {name, value_eur, invested_eur, profit_eur,
                 securities_count, securities: {name: {isin, wkn, shares,
                 current_price_eur, total_value_eur}}}
@@ -230,6 +235,9 @@ def get_accounts() -> dict:
     """List all accounts with their current cash balances.
 
     Accounts represent cash holdings (e.g. checking account, deposit account).
+    Balances are in each account's native currency — no FX conversion is
+    performed. The "_eur" suffix is a label; if you suspect non-EUR
+    accounts, the user should verify their setup.
 
     Returns:
         accounts: list of {name, balance_eur}
@@ -262,7 +270,11 @@ def get_depots() -> dict:
 
 @mcp.tool
 def get_securities() -> dict:
-    """List all unique securities held across all depots.
+    """List all securities tracked in the portfolio.
+
+    Includes securities the user has fully sold (shares == 0) and
+    watchlist entries that were never bought. For currently held
+    positions only, use get_securities_with_values().
 
     Each entry includes identifying info (ISIN, WKN), current market price,
     total shares held, and total value.
@@ -394,7 +406,7 @@ def get_security_price_history(name: str, limit: int = 100) -> dict:
         security: security name
         prices: list of {date, price_eur} sorted by date descending
         count: number of prices returned
-        total_available: total number of price records in the XML
+        total_available: total number of price records available
     """
     _require_portfolio()
     sec = _get_security(name)
