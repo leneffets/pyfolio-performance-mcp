@@ -50,6 +50,18 @@ class CrossEntry(PortfolioPerformanceObject):
         tx_to = nextEntry.content.get("transactionTo")
 
         def _already_exists(tx, account):
+            """Dedup by UUID — globally unique per Portfolio Performance.
+
+            Falls back to (date, type, value) only if a UUID is missing,
+            which should not happen in real PP exports but stays safe.
+            """
+            new_uuid = tx.content.get('uuid') if hasattr(tx, 'content') else None
+            if new_uuid:
+                for existing in account.transactions:
+                    if existing.content.get('uuid') == new_uuid:
+                        return True
+                return False
+
             for existing in account.transactions:
                 if (str(existing.getDate()) == str(tx.getDate())
                         and existing.type == tx.type

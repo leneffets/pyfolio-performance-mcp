@@ -103,32 +103,67 @@ class Account(PortfolioPerformanceObject):
         self._resolveReferencedTransactions()
 
     def _resolveReferencedTransactions(self):
-        base_path = 'client/accounts/account/transactions/account-transaction'
-        txs = self.content.get('transactions', {}).get('account-transaction', [])
+        """Resolve <account-transaction> @reference entries to actual objects.
 
-        added = 0
-        for i, transact in enumerate(txs):
-            if "@reference" in transact:
-                try:
-                    ref_path = transact.get('@reference', '')
-                    if ref_path and ref_path.startswith('../'):
-                        parts = ref_path.split('/')
-                        abs_parts = ['client', 'accounts', 'account', 'transactions', 'account-transaction']
-                        for part in parts:
-                            if part == '..':
-                                if len(abs_parts) > 1:
-                                    abs_parts.pop()
-                            else:
-                                abs_parts.append(part)
-                        abs_path = '/'.join(abs_parts)
-                        resolved = Portfolio.currentPortfolio.getObjectByPath(abs_path)
-                        if resolved and hasattr(resolved, 'setAccount'):
-                            resolved.setAccount(self)
-                            if resolved not in self.transactions:
-                                self.transactions.append(resolved)
-                                added += 1
-                except Exception:
-                    pass
+        These appear when CSV-imported accounts share transactions across
+        accounts via XStream references. Each reference path is rewritten
+        to absolute, looked up via the Portfolio path map, and the
+        resolved transaction is appended to this account's list (and the
+        account is set on the transaction).
+        """
+        transactions_node = self.content.get('transactions')
+        if transactions_node is None:
+            return
+
+        txs = transactions_node.get('account-transaction')
+        if txs is None:
+            return
+
+        # xmltodict returns a dict (not a list) for a single child element.
+        if isinstance(txs, dict):
+            txs = [txs]
+
+        for transact in txs:
+            if not isinstance(transact, dict) or "@reference" not in transact:
+                continue
+
+            ref_path = transact.get('@reference', '')
+            if not ref_path or not ref_path.startswith('../'):
+                continue
+
+            # Translate the relative reference into an absolute path
+            # rooted at the canonical account-transaction location.
+            parts = ref_path.split('/')
+            abs_parts = ['client', 'accounts', 'account',
+                         'transactions', 'account-transaction']
+            for part in parts:
+                if part == '..':
+                    if len(abs_parts) > 1:
+                        abs_parts.pop()
+                else:
+                    abs_parts.append(part)
+            abs_path = '/'.join(abs_parts)
+
+            try:
+                resolved = Portfolio.currentPortfolio.getObjectByPath(abs_path)
+            except Exception as e:
+                # Path lookup itself failed — surface as repr, do not crash
+                # the rest of the resolution loop.
+                print("Reference lookup failed for %s: %r" % (abs_path, e))
+                continue
+
+            if resolved is None:
+                # Reference points at something not (yet) registered —
+                # silently skip; the second pass in Portfolio.__init__
+                # will retry once depots are also parsed.
+                continue
+
+            if not hasattr(resolved, 'setAccount'):
+                continue
+
+            resolved.setAccount(self)
+            if resolved not in self.transactions:
+                self.transactions.append(resolved)
 
 
     def __repr__(self) -> str:

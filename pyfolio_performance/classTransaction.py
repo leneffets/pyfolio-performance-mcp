@@ -89,7 +89,7 @@ class Transaction(PortfolioPerformanceObject):
             elif self.type not in Transaction.positive:
                 val = self.getSecurityBasedValue()
             return val
-        except (KeyError, AttributeError, ValueError) as e:
+        except (KeyError, AttributeError, TypeError, ValueError):
             return 0
 
     def getSecurityBasedValue(self):
@@ -109,13 +109,13 @@ class Transaction(PortfolioPerformanceObject):
     def getAmount(self):
         try:
             return int(self.content["amount"])
-        except (KeyError, ValueError):
+        except (KeyError, TypeError, ValueError):
             return 0
 
     def getShares(self):
         try:
             return int(self.content["shares"])
-        except (KeyError, ValueError):
+        except (KeyError, TypeError, ValueError):
             return 0
 
     def getYear(self):
@@ -170,9 +170,13 @@ class Transaction(PortfolioPerformanceObject):
     def computeSecurity(self):
         if self.security != None:
             return True
-        
-        security = self.content['security']['@reference'] if 'security' in self.content else None
-        if security == None:
+
+        sec_node = self.content.get('security') if isinstance(self.content, dict) else None
+        if not isinstance(sec_node, dict):
+            return False
+
+        security = sec_node.get('@reference')
+        if security is None:
             return False
         
         match = Transaction.securityPattern.search(security)

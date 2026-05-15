@@ -63,7 +63,12 @@ class Portfolio:
     def _parseSecurities(self):
         self.securityList = []
         num = 0
-        securities = self.content['client']['securities']['security']
+
+        client = self.content.get('client') or {}
+        securities_section = client.get('securities') or {}
+        securities = securities_section.get('security')
+        if securities is None:
+            return
 
         if isinstance(securities, dict):
             securities = [securities]
@@ -71,7 +76,8 @@ class Portfolio:
         for sec in securities:
             sec['num'] = num
             secObj = Security.parseContent(sec)
-            self.uuid_map[sec['uuid']] = secObj
+            if 'uuid' in sec:
+                self.uuid_map[sec['uuid']] = secObj
             self.securityList.append(secObj)
             num += 1
 
@@ -80,7 +86,12 @@ class Portfolio:
 
         num = 1
         refPath = 'client/accounts/account'
-        accounts = self.content['client']['accounts']['account']
+
+        client = self.content.get('client') or {}
+        accounts_section = client.get('accounts') or {}
+        accounts = accounts_section.get('account')
+        if accounts is None:
+            return
 
         if isinstance(accounts, dict):
             accounts = [accounts]
@@ -101,7 +112,12 @@ class Portfolio:
 
         num = 1
         refPath = 'client/portfolios/portfolio'
-        depots = self.content['client']['portfolios']['portfolio']
+
+        client = self.content.get('client') or {}
+        portfolios_section = client.get('portfolios') or {}
+        depots = portfolios_section.get('portfolio')
+        if depots is None:
+            return
 
         if isinstance(depots, dict):
             depots = [depots]

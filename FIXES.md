@@ -1,5 +1,90 @@
 # Fixes Applied
 
+## Round 3 — Hardening of existing fixes (May 2026)
+
+Code review pass on the Round 1 fixes — corrected a few edge cases the
+original AI-generated patches missed. Verified bit-identical output
+against `kommer.xml` and `depot.xml` (no regressions); these are pure
+hardening changes.
+
+### R3.1 — `Account._resolveReferencedTransactions` rewrite
+
+Three issues in the original Fix #10 implementation:
+
+- **Single-transaction crash path:** `txs = ... .get('account-transaction', [])`
+  returns a dict (not a list) when an account has exactly one referenced
+  transaction. `enumerate(dict)` walks the keys (strings); the
+  `if "@reference" in transact` check then becomes a substring match on
+  a string and silently skips a real reference.
+- **`except Exception: pass`** swallowed every error including misparses,
+  KeyErrors, AttributeErrors — invisible during debugging.
+- Dead variables: `base_path` was assigned but unused; `added` counted
+  appends but the value was never returned or logged.
+
+**Fix** (`classAccount.py`): wrap dict→list, surface lookup errors via
+`print` (kept silent for the legitimate "not yet registered" case so
+the second pass in `Portfolio.__init__` can retry), drop dead variables,
+clearer control flow with early-`continue` instead of nested ifs.
+
+### R3.2 — `CrossEntry.crossEntry_accountTransfer` UUID dedup
+
+The original Fix #11 deduplicated by `(date, type, value)`. False
+positives are realistic: two separate same-day transfers of the same
+amount and same type (e.g. two scheduled standing orders) would collapse
+into one, dropping a real transaction.
+
+**Fix** (`classCrossEntry.py`): dedup by `content['uuid']`, which is
+globally unique in PP. Triple-key kept as fallback for transactions
+without a UUID (defensive, should not occur in real exports).
+
+### R3.3 — `Transaction.getValue / getAmount / getShares` also catch `TypeError`
+
+The original Fix #8 caught `KeyError` and `ValueError` but not
+`TypeError`. If the XML attribute is present but `None` (rare but
+possible), `int(None)` raises `TypeError` and propagates.
+
+**Fix** (`classTransaction.py`): added `TypeError` to the except tuple
+in `getValue`, `getAmount`, `getShares`.
+
+### R3.4 — Defensive `_parseSecurities` / `_parseAccounts` / `_parseDepots`
+
+A Portfolio Performance file with a fully empty client (no securities,
+no accounts, no portfolios) would crash with KeyError on the chained
+`self.content['client']['securities']['security']` lookup. Unlikely in
+production but free to guard.
+
+**Fix** (`classPortfolio.py`): `.get()`-chained navigation, early return
+if the section or its child element is missing. Also added a `'uuid' in
+sec` guard in `_parseSecurities` for malformed entries.
+
+### R3.5 — `Transaction.computeSecurity` defensive lookup
+
+Original code:
+
+```python
+security = self.content['security']['@reference'] if 'security' in self.content else None
+```
+
+Assumed `content['security']` is a dict containing `'@reference'`. If
+the security node lacks the reference attribute (inline security
+without XStream reference), KeyError.
+
+**Fix** (`classTransaction.py`): `.get('@reference')` plus an
+`isinstance(sec_node, dict)` guard.
+
+### R3.6 — `Filters.fSecurityTransaction` does not crash on bad paths
+
+Original lambda called `getSecurity()`, which calls `computeSecurity()`,
+which raises `RuntimeError` on a malformed `securities/security[...]`
+path. Filtering across all transactions could blow up on a single
+bad entry.
+
+**Fix** (`classFilters.py`): wrap in try/except, return `False` on
+RuntimeError / AttributeError / KeyError so a malformed transaction
+gets filtered out rather than aborting the whole filter sweep.
+
+---
+
 ## Round 2 — Library audit (May 2026)
 
 Verified before/after against `kommer.xml` and a real `depot.xml`. Account

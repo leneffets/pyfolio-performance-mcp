@@ -44,7 +44,12 @@ class Filters:
         :return: A filter function that ensures the entry is a transaction about the given security.
         :type: Entry -> bool
         """
-        return lambda x: False if x.getSecurity() != sec else True
+        def _matches(x):
+            try:
+                return x.getSecurity() == sec
+            except (RuntimeError, AttributeError, KeyError):
+                return False
+        return _matches
 
     @staticmethod
     def fBefore(date):
