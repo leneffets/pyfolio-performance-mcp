@@ -3,8 +3,8 @@ import re
 
 class Transaction(PortfolioPerformanceObject):
 
-    negative = ['TRANSFER_OUT', 'REMOVAL', 'INTEREST_CHARGE', 'FEES', 'TAXES', 'BUY']
-    positive = ['INTEREST', 'DEPOSIT', 'TRANSFER_IN', 'DIVIDENDS', 'SELL', 'FEES_REFUND', 'TAX_REFUND']
+    negative = ['TRANSFER_OUT', 'REMOVAL', 'INTEREST_CHARGE', 'FEES', 'TAXES', 'BUY', 'DELIVERY_OUTBOUND']
+    positive = ['INTEREST', 'DEPOSIT', 'TRANSFER_IN', 'DIVIDENDS', 'SELL', 'FEES_REFUND', 'TAX_REFUND', 'DELIVERY_INBOUND']
 
     negativeDepot = ["DELIVERY_OUTBOUND", "SELL", "TRANSFER_OUT"]
     positiveDepot = ["BUY", "DELIVERY_INBOUND", "TRANSFER_IN"]
@@ -93,7 +93,18 @@ class Transaction(PortfolioPerformanceObject):
             return 0
 
     def getSecurityBasedValue(self):
-        return self.getShares() * self.getSecurity().getMostRecentValue()
+        """
+        Fallback value calculation for transactions without an `amount`:
+        shares × current price, scaled back to cents.
+
+        getShares() returns the raw 10^8-scaled value from the XML and
+        getMostRecentValue() returns a cent value, so divide by the
+        share scale to land in cents.
+        """
+        sec = self.getSecurity()
+        if sec is None:
+            return 0
+        return self.getShares() * sec.getMostRecentValue() / 100000000
 
     def getAmount(self):
         try:

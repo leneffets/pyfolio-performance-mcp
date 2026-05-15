@@ -118,8 +118,23 @@ class Depot(PortfolioPerformanceObject):
         if content.get('transactions') is None:
             return
 
+        txs = content['transactions'].get('portfolio-transaction')
+        if txs is None:
+            return
+
+        # xmltodict returns a dict (not a list) for a single child element.
+        if isinstance(txs, dict):
+            txs = [txs]
+
         num = 1
-        for transact in content['transactions']['portfolio-transaction']:
+        for transact in txs:
+            # Reference-only entries are resolved later via resolveReference;
+            # they do not need a fresh parse here, but the path index must
+            # still be advanced so subsequent siblings get the correct path.
+            if "@reference" in transact:
+                num += 1
+                continue
+
             transact['depot'] = self
             if not 'referencePath' in content:
                 content['referencePath'] = '../portfolio'

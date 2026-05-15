@@ -47,6 +47,7 @@ class Security(PortfolioPerformanceObject):
                     if string == "logo":
                         continue
                     self.logo = string
+                    break
             elif isinstance(string_list, str):
                 if string_list != "logo":
                     self.logo = string_list
@@ -55,6 +56,7 @@ class Security(PortfolioPerformanceObject):
 
         return self.logo
 
+    @staticmethod
     def getSecurityByNum(num: int) -> 'Security':
         return Security.securityNums[num-1] # -1 because the num starts at 1
 

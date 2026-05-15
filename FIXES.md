@@ -1,5 +1,98 @@
 # Fixes Applied
 
+## Round 2 — Library audit (May 2026)
+
+Verified before/after against `kommer.xml` and a real `depot.xml`. Account
+balances and per-depot share counts stayed identical; only the buggy
+aggregations changed.
+
+### R2.1 — BUY/SELL double-counting in `Portfolio.getTotalTransactions(ALL)`
+
+PP records every buy/sell as two linked `Transaction` objects: one on the
+account (cash flow) and one on the depot (share movement). Both carry the
+same `amount`. Iterating with `TRANSACTION_ALL` returned both, so any
+caller summing `getValue()` over BUY/SELL got double the real value.
+
+**Impact reproduced on depot.xml:**
+- `BUY` total before: -415,700.98 EUR
+- `BUY` total after:  -207,850.49 EUR (matches account-only sum)
+- Same factor-2 issue for `SELL`.
+- `total_payin_eur` was unaffected (filters to DEPOSIT/REMOVAL/TRANSFER,
+  which either appear only on the account side or self-cancel as +/-).
+
+**Fix** (`classPortfolio.py`): in `getTotalTransactions(TRANSACTION_ALL)`,
+skip the depot-side of BUY/SELL. The cash side is the canonical record;
+share-count math goes through `Depot.getSecurities()` which reads the
+depot transactions directly and is unaffected.
+
+### R2.2 — `Transaction.getSecurityBasedValue()` unit mismatch + DELIVERY types
+
+`getShares()` returns the raw 10^8-scaled value; `getMostRecentValue()`
+returns cents. The product was ~10^8 too big.
+
+This was reached for any type not listed in `Transaction.positive` /
+`Transaction.negative` — most importantly `DELIVERY_INBOUND` and
+`DELIVERY_OUTBOUND`, which exist in real exports (e.g. spinoffs).
+On depot.xml a single `DELIVERY_INBOUND` aggregated to ~26 trillion EUR.
+
+**Fix** (`classTransaction.py`):
+- `DELIVERY_INBOUND` → `positive`, `DELIVERY_OUTBOUND` → `negative`, so
+  `getValue()` uses the `amount` field directly (PP fills it for delivery
+  transactions, e.g. tax basis).
+- `getSecurityBasedValue()` now divides by 10^8 (and returns 0 if no
+  security is attached) so the fallback path is also correct.
+
+After fix, `DELIVERY_INBOUND` on depot.xml: 3,103.99 EUR (sane).
+
+### R2.3 — `Depot._parseTransactions` crash on single-transaction depot
+
+Same pattern Fix #2 already applied to `Account`, but missed in `Depot`.
+xmltodict returns a dict (not a list) when there is only one child, so
+iterating `content['transactions']['portfolio-transaction']` would walk
+the dict's keys and crash. Also added an `@reference` skip analogous to
+the Account fix.
+
+**Fix** (`classDepot.py`): wrap dict→list, skip reference-only entries,
+preserve the index counter for path generation.
+
+### R2.4 — `DateObject.__repr__` missing zero-padding
+
+`"%d-%d-%d"` produced `"2020-1-7"` instead of `"2020-01-07"`. Strings were
+not ISO 8601 and sorted incorrectly lexicographically.
+
+**Fix** (`classDateObject.py`): `"%04d-%02d-%02d"`.
+
+### R2.5 — `Account.copy_from` missing `content` and `balance`
+
+Inconsistent with `Depot.copy_from`. An Account resolved via `@reference`
+kept the stub `{'@reference': '...'}` as its `content`, and a previously
+cached `balance` was not invalidated.
+
+**Fix** (`classAccount.py`): also call `other.resolveReference()` first,
+copy `content`, reset `balance = None` so it is recomputed from the
+fresh transaction list.
+
+### R2.6 — `Security.getLogo` overwriting on every iteration
+
+The loop over the attribute string list assigned `self.logo = string` on
+every non-"logo" entry, so the last one always won. Looks like a
+forgotten `break`.
+
+**Fix** (`classSecurity.py`): `break` after the first non-marker string.
+
+### R2.7 — Cleanup
+
+- `Security.getSecurityByNum` now has the `@staticmethod` decorator it
+  was missing (worked by accident, no behavioural change).
+- New `Portfolio._resetClassState()` is invoked automatically at the
+  start of every `Portfolio.__init__`, so loading a second portfolio in
+  the same process no longer requires a manual `reset()` call. The
+  top-level `reset()` helper still exists and now delegates to it.
+
+---
+
+## Round 1
+
 ## 10 Bug Fixes
 
 ### 11. classCrossEntry.py - Missing account-transfer handler

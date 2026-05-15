@@ -15,10 +15,15 @@ class Account(PortfolioPerformanceObject):
         Portfolio.currentPortfolio.registerPath(content['referencePath'], self)
 
     def copy_from(self, other):
+        other.resolveReference()
+
         self.uuid = other.uuid
         self.name = other.name
         self.reference = other.reference
         self.transactions = other.transactions
+        self.content = other.content
+        # invalidate cached balance — recomputed from transactions on demand
+        self.balance = None
 
     def getBalance(self):
         """

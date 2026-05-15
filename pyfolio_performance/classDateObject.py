@@ -39,7 +39,7 @@ class DateObject:
 
     def __repr__(self) -> str:
         """
-        :return: Returns the date string the same way portfolio performance uses it in the XML.
+        :return: ISO 8601 date string (YYYY-MM-DD), zero-padded.
         :type: str
         """
-        return "%d-%d-%d" % (self.getYear(), self.getMonth(), self.getDay())
+        return "%04d-%02d-%02d" % (self.getYear(), self.getMonth(), self.getDay())

@@ -18,7 +18,31 @@ class Portfolio:
     uuid_map = {}
     path_map = {}
 
+    @staticmethod
+    def _resetClassState():
+        """Clear all class-level caches.
+
+        Called automatically by Portfolio.__init__ so that loading a second
+        portfolio in the same process does not leak state from the previous
+        one. Also exposed via the top-level reset() helper for explicit use.
+        """
+        Security.securityNameMap.clear()
+        Security.securityIsinMap.clear()
+        Security.securityWknMap.clear()
+        Security.securityNums.clear()
+        Security.mostRecentValue = None
+        Transaction.referenceMap.clear()
+        Depot.depotMap.clear()
+        CrossEntry.crossEntryQueue.clear()
+        Portfolio.uuid_map.clear()
+        Portfolio.path_map.clear()
+        Portfolio.parent_map.clear()
+
     def __init__(self, filename):
+        # Auto-reset class-level caches so loading a second portfolio in
+        # the same process is safe without needing an explicit reset() call.
+        Portfolio._resetClassState()
+
         Portfolio.currentPortfolio = self
         with open(filename, 'r') as f:
             xml_content = f.read()
@@ -155,7 +179,16 @@ class Portfolio:
 
     def getTotalTransactions(self, transactionType):
         """
-        Returns the list of all transactions in the portfolio across all depots and accounts.
+        Returns the list of transactions across depots and/or accounts.
+
+        For TRANSACTION_ALL the result is deduplicated for buy/sell pairs:
+        a buy/sell event in Portfolio Performance is recorded twice — once
+        on the account (cash flow) and once on the depot (share movement).
+        Both entries carry the same value, so naive summing across ALL
+        would double-count. We keep the account-side and drop the
+        depot-side, since the cash-flow representation is the canonical
+        one for value aggregation. Per-depot share calculations rely on
+        Depot.transactions directly and are unaffected.
 
         :return: The extracted transaction list.
         :type: list(Transaction)
@@ -163,7 +196,13 @@ class Portfolio:
         totalTransactions = []
         if transactionType == Portfolio.TRANSACTION_DEPOT or transactionType == Portfolio.TRANSACTION_ALL:
             for depot in self.getDepots():
-                totalTransactions.extend(depot.getTransactions())
+                for t in depot.getTransactions():
+                    if (transactionType == Portfolio.TRANSACTION_ALL
+                            and t.type in ('BUY', 'SELL')):
+                        # depot-side of a buy/sell — skip, account-side
+                        # carries the cash flow
+                        continue
+                    totalTransactions.append(t)
         if transactionType == Portfolio.TRANSACTION_ACCOUNT or transactionType == Portfolio.TRANSACTION_ALL:
             for acc in self.getAccounts():
                 totalTransactions.extend(acc.getTransactions())
