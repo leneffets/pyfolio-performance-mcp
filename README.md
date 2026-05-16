@@ -131,6 +131,27 @@ Add this to your project `opencode.json`:
 
 Then run opencode from the project directory. The portfolio auto-loads on startup.
 
+## Sample Prompt
+
+
+```
+You are a portfolio analyst. Analyze this portfolio across:
+- Strategy clarity
+- Portfolio structure & diversification
+- Position quality & redundancies
+- Risk analysis (sector, regional, career correlation)
+- Performance overview
+- Concrete recommendations & target portfolio
+- Scenario forecasts (conservative/realistic/optimistic)
+- Market valuation & phase
+- Holistic wealth perspective
+- Financial independence timeline
+- Complexity & robustness scores (KPI)
+- Long-term sustainability
+
+Use the MCP tools to fetch data, then provide actionable insights.
+```
+
 ## Test Files
 
 - **Official test file:** https://github.com/portfolio-performance/portfolio/blob/master/name.abuchen.portfolio.ui/src/name/abuchen/portfolio/ui/parts/kommer.xml
