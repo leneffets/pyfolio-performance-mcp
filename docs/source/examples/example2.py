@@ -1,33 +1,44 @@
-from pyfolio_performance import Portfolio, Filters
 from datetime import datetime
+
+from pyfolio_performance import Filters, Portfolio
+from pyfolio_performance.classTransaction import Transaction
+
 portfolio = Portfolio("portfolio.xml")
-currentNow = datetime.now()
+current_now = datetime.now()
 
-def filter_month(entry, month, year):
-    if year != entry.getYear() or month != entry.getMonth():
-        return False
-    return True
 
-filter_dividend = Filters.fAnd(Filters.fEnsureTypeList(['DIVIDENDS']),
-    lambda entry: filter_month(entry, currentNow.month, currentNow.year) )
+def filter_month(entry: Transaction, month: int, year: int) -> bool:
+    return year == entry.get_year() and month == entry.get_month()
+
+
+filter_dividend = Filters.fAnd(
+    Filters.fEnsureTypeList(["DIVIDENDS"]),
+    lambda entry: filter_month(entry, current_now.month, current_now.year),
+)
+
 
 # different clustering
-def cluster_dividend(allCluster, entry):
+def cluster_dividend(all_cluster: dict[str, int], entry: Transaction) -> str:
     return "val"
-    
-def aggregate_dividend(cluster, entry):
-    return cluster + entry.getValue()
 
-divicluster = {'val': 0}
+
+def aggregate_dividend(cluster: int | float, entry: Transaction) -> int | float:
+    return cluster + entry.get_value()
+
+
+divicluster: dict[str, int] = {"val": 0}
 portfolio.evaluateCluster(divicluster, filter_dividend, cluster_dividend, aggregate_dividend)
 print(divicluster)
 
+
 # Dividends are clustered by their name
-def cluster_dividend2(allCluster, entry):
-    k = entry.getSourceName()
-    if k not in allCluster:
-        allCluster[k] = 0
+def cluster_dividend2(all_cluster: dict[str, int], entry: Transaction) -> str:
+    k = entry.get_source_name()
+    if k not in all_cluster:
+        all_cluster[k] = 0
     return k
-divicluster = {}
-portfolio.evaluateCluster(divicluster, filter_dividend, cluster_dividend2, aggregate_dividend)
-print(divicluster)
+
+
+divicluster2: dict[str, int] = {}
+portfolio.evaluateCluster(divicluster2, filter_dividend, cluster_dividend2, aggregate_dividend)
+print(divicluster2)

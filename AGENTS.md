@@ -51,6 +51,54 @@ Define a function with `@mcp.tool`, type-annotated params, and a docstring. Fast
 
 DO NOT EXPOSE ANY REAL PERSONAL DATA like balances, depots, ages, names, prompt files that may expose data
 
+## LSP / Code Quality
+
+Configured in `pyproject.toml` (ruff + mypy) and `.vscode/settings.json`.
+
+### What each tool does
+
+| Tool | Role | Catches |
+|------|------|---------|
+| **ruff** | Linter + formatter | Style violations, unused imports, `== None`, dead code, long lines |
+| **Pylance** | Type checker (in-editor) | Wrong types, missing returns, None-safety |
+| **mypy** | Type checker (CLI) | Same as Pylance but runnable in CI, stricter |
+
+### VS Code workflow
+
+- **Red squiggles** = error from ruff or Pylance — hover to see why
+- **`Ctrl+S`** → auto-formats with ruff + organizes imports
+- **`Ctrl+Shift+M`** → Problems panel lists all diagnostics
+- **`Ctrl+.`** → Quick Fix (auto-fix the current issue)
+- **Inlay hints** (grey text) show return types and variable types — see settings in `.vscode/settings.json`
+
+### CLI workflow (before commit)
+
+```bash
+./venv/bin/ruff check .
+./venv/bin/ruff format --check .
+./venv/bin/mypy .
+```
+
+All three must pass clean. Use `ruff check --fix` to auto-fix what it can.
+
+### Common issues & fixes
+
+| Problem | Fix |
+|---------|-----|
+| `ruff` flags `X is None` style | Already fixed — never use `== None` |
+| `ruff` flags unused import | Remove it or use `# noqa: F401` if intentional |
+| `mypy` says `"X" has no attribute "Y"` | Typo in attribute name, or add `# type: ignore[attr-defined]` |
+| `mypy` says `Returning Any from function` | Add a proper return type annotation |
+| Circular import error | Use lazy import inside the function body, not at module top |
+
+### After adding a dependency
+
+If you `pip install` a new package, `mypy` may complain about missing stubs:
+```bash
+./venv/bin/pip install types-<package>
+# or add `ignore_missing_imports = true` in pyproject.toml
+```
+
 ## Commits
 
 Use conventional commits format when committing changes.

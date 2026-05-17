@@ -1,4 +1,9 @@
+from typing import Any
+
 from .classPortfolioPerformanceObject import PortfolioPerformanceObject
+
+# ruff: noqa: N802, N815, N999
+
 
 class Depot(PortfolioPerformanceObject):
     """
@@ -6,42 +11,46 @@ class Depot(PortfolioPerformanceObject):
     """
 
     referenceSkip = 6
-    depotMap = {}
+    depot_map: dict[str, "Depot"] = {}
     currentDepot = None
     scale = 100000000
 
-    def __init__(self, content, reference=None):
+    def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
         self.reference = reference
-        self.transactions = []
-        self.depotSecurities = None 
+        from .classPortfolio import Portfolio  # lazy to avoid circular import
+
+        self.transactions: list[Any] = []
+        self.depotSecurities: dict[str, Any] | None = None
         self.content = content
-        Portfolio.currentPortfolio.registerPath(content['referencePath'], self)
-        
-        if reference != None:
+        self.name = ""
+        self.uuid = ""
+        Portfolio.currentPortfolio.registerPath(content["referencePath"], self)  # type: ignore[attr-defined]
+
+        if reference is not None:
             return
 
-        self.name = content['name']
-        self.uuid = content['uuid']
-        Depot.depotMap[self.name] = self
-        Portfolio.currentPortfolio.registerUuid(content['uuid'], self)
+        self.name = content["name"]
+        self.uuid = content["uuid"]
+        Depot.depot_map[self.name] = self
+        Portfolio.currentPortfolio.registerUuid(content["uuid"], self)  # type: ignore[attr-defined]
 
-    def copy_from(self, other):
-        other.resolveReference()
-        
+    def copy_from(self, other: "Depot") -> None:
+        other.resolve_reference()
+
         self.uuid = other.uuid
         self.name = other.name
-        self.depotSecurities = other.depotSecurities 
+        self.depotSecurities = other.depotSecurities
         self.content = other.content
         self.reference = other.reference
         self.transactions = other.transactions
 
-    def resolveReference(self):
-        super().resolveReference()
-        
-        for transaction in self.transactions:
-            transaction.resolveReference()
+    def resolve_reference(self) -> None:
+        super().resolve_reference()
 
-    def getName(self):
+        for transaction in self.transactions:
+            transaction.resolve_reference()
+
+    def get_name(self) -> str:
         """
         :return: Name of the depot.
         :type: str
@@ -49,7 +58,7 @@ class Depot(PortfolioPerformanceObject):
         return self.name
 
     @staticmethod
-    def getDepotByName(name):
+    def getDepotByName(name: str) -> "Depot | None":
         """
         :param: Name of the depot that should be returned
         :type: str
@@ -57,68 +66,73 @@ class Depot(PortfolioPerformanceObject):
         :return: Existing Depot or None
         :type: Depot | None
         """
-        return Depot.depotMap.get(name)
+        return Depot.depot_map.get(name)
 
-    def getSecurities(self):
+    def get_securities(self) -> dict[str, Any]:
         """
         :return: Mapping of currently Securities to the number of contained shares
         :type: dict(Security -> float)
         """
-        if self.depotSecurities != None:
-            return self.depotSecurities
+        depot_sec = self.depotSecurities
+        if depot_sec is not None:
+            return depot_sec
         self.depotSecurities = {}
-        
+
         for transaction in self.transactions:
             sec, change = transaction.getSecurityChange()
-            if not sec in self.depotSecurities.keys():
+            if sec not in self.depotSecurities:
                 self.depotSecurities[sec] = 0
             self.depotSecurities[sec] += change
-        
-        keys = [k for k in self.depotSecurities.keys()]
+
+        keys = list(self.depotSecurities)
         for k in keys:
             if self.depotSecurities[k] == 0:
                 self.depotSecurities.pop(k)
             else:
-                self.depotSecurities[k] = self.depotSecurities[k]/Depot.scale
+                self.depotSecurities[k] = self.depotSecurities[k] / Depot.scale
                 # Doing this scale at the end to get the most accurate result
-        
+
         return self.depotSecurities
 
-    def clearDuplicateTransactions(self):
+    def clearDuplicateTransactions(self) -> None:
         """
         This method is used to remove duplicate transactions from the depot.
         """
         # print("Clearing duplicates from %s" % self)
         # print(len(self.transactions))
-        existingReference = []
-        newTransactions = []
+        existing_reference = []
+        new_transactions = []
         for transaction in self.transactions:
-            if not transaction.content['referencePath'] in existingReference:
-                newTransactions.append(transaction)
-                existingReference.append(transaction.content['referencePath'])
-        # print(len(newTransactions))
-        self.transactions = newTransactions
+            if transaction.content["referencePath"] not in existing_reference:
+                new_transactions.append(transaction)
+                existing_reference.append(transaction.content["referencePath"])
+        # print(len(new_transactions))
+        self.transactions = new_transactions
         # print()
 
     @staticmethod
-    def parse(content):
-        if "@reference" in content.keys():
-            return Depot(content, content['@reference'])
-        
+    def parse(content: dict[str, Any]) -> "Depot":  # type: ignore[override]
+        from .classAccount import Account  # lazy to avoid circular import
+
+        if "@reference" in content:
+            return Depot(content, content["@reference"])
+
         rslt = Depot(content)
         rslt._parseTransactions(content)
-        
-        if 'referenceAccount' in content:
-            content['referenceAccount']['referencePath'] = content['referencePath'] + '/referenceAccount'
-            Account.parse(content['referenceAccount'])
+
+        if "referenceAccount" in content:
+            content["referenceAccount"]["referencePath"] = (
+                content["referencePath"] + "/referenceAccount"
+            )
+            Account.parse(content["referenceAccount"])
 
         return rslt
-    
-    def _parseTransactions(self, content):
-        if content.get('transactions') is None:
+
+    def _parseTransactions(self, content: dict[str, Any]) -> None:
+        if content.get("transactions") is None:
             return
 
-        txs = content['transactions'].get('portfolio-transaction')
+        txs = content["transactions"].get("portfolio-transaction")
         if txs is None:
             return
 
@@ -128,28 +142,37 @@ class Depot(PortfolioPerformanceObject):
 
         num = 1
         for transact in txs:
-            # Reference-only entries are resolved later via resolveReference;
+            # Reference-only entries are resolved later via resolve_reference;
             # they do not need a fresh parse here, but the path index must
             # still be advanced so subsequent siblings get the correct path.
             if "@reference" in transact:
                 num += 1
                 continue
 
-            transact['depot'] = self
-            if not 'referencePath' in content:
-                content['referencePath'] = '../portfolio'
+            transact["depot"] = self
+            if "referencePath" not in content:
+                content["referencePath"] = "../portfolio"
             if num == 1:
-                transact['referencePath'] = content['referencePath'] + '/transactions/portfolio-transaction'
+                transact["referencePath"] = (
+                    content["referencePath"] + "/transactions/portfolio-transaction"
+                )
             else:
-                transact['referencePath'] = content['referencePath'] + '/transactions/portfolio-transaction[%d]' % num
-            transact['account'] = None
-            transactionObject = Transaction.parse(transact)
-            if 'uuid' in transact:
-                Portfolio.currentPortfolio.registerUuid(transact['uuid'], transactionObject)
-            self.transactions.append(transactionObject)
+                transact["referencePath"] = (
+                    content["referencePath"] + f"/transactions/portfolio-transaction[{num}]"
+                )
+            transact["account"] = None
+            from .classPortfolio import Portfolio  # lazy to avoid circular import
+            from .classTransaction import Transaction  # lazy to avoid circular import
+
+            transaction_obj = Transaction.parse(transact)
+            if "uuid" in transact:
+                Portfolio.currentPortfolio.registerUuid(  # type: ignore[attr-defined]
+                    transact["uuid"], transaction_obj
+                )
+            self.transactions.append(transaction_obj)
             num += 1
 
-    def getTransactions(self):
+    def get_transactions(self) -> list[Any]:
         """
         :return: list of transactions in the depot.
         :type: list(Transaction)
@@ -157,9 +180,4 @@ class Depot(PortfolioPerformanceObject):
         return self.transactions
 
     def __repr__(self) -> str:
-        return "Depot/%s" % self.name
-
-
-from .classPortfolio import *
-from .classTransaction import *
-from .classAccount import *
+        return f"Depot/{self.name}"

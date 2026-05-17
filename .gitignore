@@ -1,6 +1,12 @@
 # Personal portfolio data files
 *.xml
 
+# OpenCode internal config
+.opencode/
+
+# Upstream Portfolio Performance Java project
+portfolio/
+
 # Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
 

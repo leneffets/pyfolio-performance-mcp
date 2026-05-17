@@ -1,24 +1,15 @@
-# import xml.etree.ElementTree as ElementTree
+# ruff: noqa: N802, N806
 
-# def printXml(xml):
-#     if xml == None:
-#         print("No xml given")
-#         return
-#     print(ElementTree.tostring(xml, encoding='utf8', method='xml'))
+from __future__ import annotations
 
-# def resolveXmlReference(entry, reference):
-#     if len(reference) == 0:
-#         return entry
-#     if len(reference)==2 and reference == "..":
-#         return Portfolio.parent_map[entry]
-#     if reference[:3] == "../":
-#         return resolveXmlReference(Portfolio.parent_map[entry], reference[3:])
-#     return entry.find(reference)
+import json
+from typing import Any
 
-def combinePaths(absolute, relative):
+
+def combinePaths(absolute: str, relative: str) -> str:
     absoluteSplit = absolute.split("/")
     relativeSplit = relative.split("/")
-    
+
     toRemove = 0
     for i in range(len(relativeSplit)):
         if relativeSplit[i] == "..":
@@ -30,21 +21,24 @@ def combinePaths(absolute, relative):
     relativeSplit = relativeSplit[toRemove:]
     return "/".join(absoluteSplit + relativeSplit)
 
-def copy_from(self, other):
+
+def copy_from(self: Any, other: Any) -> None:
     if not isinstance(other, self.__class__):
         raise ValueError("Can only copy attributes from an instance of the same class")
-        
+
     self.__dict__.update(other.__dict__)
 
-import json
+
 class MyCustomClassEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: Any) -> Any:
+        from .classAccount import Account
+        from .classDepot import Depot
+        from .classTransaction import Transaction
+
         if isinstance(obj, Transaction):
             return obj.to_dict()
         elif isinstance(obj, Account):
-            return str(obj)#.content.to_dict()
+            return str(obj)
         elif isinstance(obj, Depot):
             return obj.content
         return super().default(obj)
-
-from .classPortfolio import *

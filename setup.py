@@ -1,15 +1,15 @@
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
-
 # To use a consistent encoding
 from codecs import open
 from os import path
+
+from setuptools import setup
 
 # The directory containing this file
 HERE = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
+with open(path.join(HERE, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 # This call to setup() does all the work
@@ -41,5 +41,5 @@ setup(
     keywords="portfolio-performance mcp investment finance trading etf stocks",
     packages=["pyfolio_performance"],
     include_package_data=True,
-    install_requires=["xmltodict"]
+    install_requires=["xmltodict"],
 )

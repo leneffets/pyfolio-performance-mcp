@@ -1,6 +1,11 @@
+# ruff: noqa: N999
 import re
+from typing import Any
 
-arrayRegex = re.compile(r"\[(\d+)\]$")
+from .helpers import combinePaths, copy_from
+
+_array_regex = re.compile(r"\[(\d+)\]$")
+
 
 class PortfolioPerformanceObject:
     """
@@ -10,14 +15,17 @@ class PortfolioPerformanceObject:
     - resolution of objects that are defined by references,
     - general parsing methods.
     """
-    parsed = {}
-    referenceSkip = 3
 
-    _attributeList = []
-    _attributes = {}
-    _attribObjectMap = {}
+    parsed: dict[str, "PortfolioPerformanceObject"] = {}
+    reference_skip: int = 3
 
-    def _getAttribute(self, name):
+    _attribute_list: list[str] = []
+    _attributes: dict[str, Any] = {}
+    _attrib_object_map: dict[str, dict[str, "PortfolioPerformanceObject"]] = {}
+    reference: str | None = None
+    content: dict[str, Any] = {}
+
+    def _get_attribute(self, name: str) -> Any:
         """
         :param name: the name of the attribute
         :type name: str
@@ -25,12 +33,11 @@ class PortfolioPerformanceObject:
         :return: the stored value
         :type: arbitrary
         """
-        if name in self._attributes.keys():
+        if name in self._attributes:
             return self._attributes[name]
         return None
 
-
-    def _setAttribute(self, name, value):
+    def _set_attribute(self, name: str, value: Any) -> None:
         """
         :param name: name of the attribute
         :type name: str
@@ -41,15 +48,16 @@ class PortfolioPerformanceObject:
         self._attributes[name] = value
 
         # Connect attribute to the corresponding class map
-        if not name in self.__class__._attribObjectMap:
-            self.__class__._attribObjectMap[name] = {}
-        self.__class__._attribObjectMap[name][value] = self
+        if name not in self.__class__._attrib_object_map:
+            self.__class__._attrib_object_map[name] = {}
+        self.__class__._attrib_object_map[name][value] = self
 
     @classmethod
-    def getObjectByAttribute(cls, attr, value):
+    def get_object_by_attribute(cls, attr: str, value: str) -> "PortfolioPerformanceObject | None":
         """
-        Note it only works if there is a single object for the attribute and the value.
-        For example, we can ask for the attribute `isin` of a security with the value `DE0005190003` leading to BMW.
+        Note it only works if there is a single object for the attribute
+        and the value. For example, we can ask for the attribute `isin`
+        of a security with the value `DE0005190003` leading to BMW.
 
         :param attr: the attribute we are looknig for
         :type attr: str
@@ -60,15 +68,25 @@ class PortfolioPerformanceObject:
         :return: the store object for the value
         :type: object
         """
-        if not attr in cls._attribObjectMap:
-            return
-        attrMap = cls._attribObjectMap[attr]
-        if not value in attrMap:
-            return
-        return attrMap[value]
+        if attr not in cls._attrib_object_map:
+            return None
+        attr_map = cls._attrib_object_map[attr]
+        if value not in attr_map:
+            return None
+        return attr_map[value]
 
     @classmethod
-    def parse(cls, parentNode, data: dict) -> 'PortfolioPerformanceObject':
+    def parse_by_reference(
+        cls, parent_node: Any, reference: str
+    ) -> "PortfolioPerformanceObject | None":
+        return None
+
+    @classmethod
+    def parse_content(cls, data: dict[str, Any]) -> "PortfolioPerformanceObject | None":
+        return None
+
+    @classmethod
+    def parse(cls, parent_node: Any, data: dict[str, Any]) -> "PortfolioPerformanceObject | None":
         """
         This methods parses portfolio performance objects.
         It returns the parsed result of the referenced xml.
@@ -82,28 +100,32 @@ class PortfolioPerformanceObject:
         :return: Parsed object.
         :type: Subclass of PortfolioPerformanceObject
         """
-        rslt = None
-        if '@reference' in data.keys():
-            rslt = cls.parseByReference(parentNode, data['@reference'])
+        rslt: PortfolioPerformanceObject | None = None
+        if "@reference" in data:
+            rslt = cls.parse_by_reference(parent_node, data["@reference"])
         else:
-            rslt = cls.parseContent(data)
+            rslt = cls.parse_content(data)
             # rslt.parseAttributes()
 
         return rslt
-    
-    def copy_from(self, other):
+
+    def copy_from(self, other: Any) -> None:
         copy_from(self, other)
-    
-    def resolveReference(self):
-        if self.reference == None:
+
+    def resolve_reference(self) -> None:
+        from .classPortfolio import Portfolio  # lazy to avoid circular import
+
+        if self.reference is None:
             return
-        combined = combinePaths( self.content['referencePath'], self.reference)
-        
-        other = Portfolio.currentPortfolio.getObjectByPath(combined)
-        if other == None:
-            raise RuntimeError(f"Cannot resolve reference [{self.__class__}]: " + str(combined) + " from " + str(self.reference))
-        
+        combined = combinePaths(self.content["referencePath"], self.reference)
+
+        other = Portfolio.currentPortfolio.getObjectByPath(combined)  # type: ignore[attr-defined]
+        if other is None:
+            raise RuntimeError(
+                f"Cannot resolve reference [{self.__class__}]: "
+                + str(combined)
+                + " from "
+                + str(self.reference)
+            )
+
         self.copy_from(other)
-        
-from .helpers import *
-from .classPortfolio import *

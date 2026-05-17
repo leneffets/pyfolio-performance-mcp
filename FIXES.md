@@ -1,5 +1,10 @@
 # Fixes Applied
 
+> **Note (May 2026):** All public library methods have been renamed to
+> snake_case (e.g. `getAccounts` → `get_accounts`, `getName` → `get_name`).
+> References to old names in this file are historical — see the current
+> code for the actual API.
+
 ## Round 3 — Hardening of existing fixes (May 2026)
 
 Code review pass on the Round 1 fixes — corrected a few edge cases the

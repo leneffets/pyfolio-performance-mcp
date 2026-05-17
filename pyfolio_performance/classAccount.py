@@ -1,21 +1,28 @@
+from typing import Any
+
 from .classPortfolioPerformanceObject import PortfolioPerformanceObject
+
+# ruff: noqa: N802, N999
+
 
 class Account(PortfolioPerformanceObject):
     """
     The class that manages a money account and its transactions.
     """
 
-    def __init__(self, content, reference=None):
-        self.transactions = []
-        self.uuid = content['uuid'] if 'uuid' in content else None
-        self.name = content['name'] if 'name' in content else None
-        self.content = content
-        self.balance = None
-        self.reference = reference
-        Portfolio.currentPortfolio.registerPath(content['referencePath'], self)
+    def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
+        from .classPortfolio import Portfolio  # lazy to avoid circular import
 
-    def copy_from(self, other):
-        other.resolveReference()
+        self.transactions: list[Any] = []
+        self.uuid: str | None = content.get("uuid")
+        self.name: str | None = content.get("name")
+        self.content = content
+        self.balance: int | None = None
+        self.reference = reference
+        Portfolio.currentPortfolio.registerPath(content["referencePath"], self)  # type: ignore[attr-defined]
+
+    def copy_from(self, other: "Account") -> None:
+        other.resolve_reference()
 
         self.uuid = other.uuid
         self.name = other.name
@@ -25,26 +32,27 @@ class Account(PortfolioPerformanceObject):
         # invalidate cached balance — recomputed from transactions on demand
         self.balance = None
 
-    def getBalance(self):
+    def get_balance(self) -> int:
         """
         :return: Balance of the account in cents.
         :type: int
         """
-        if self.balance != None:
-            return self.balance
+        bal = self.balance
+        if bal is not None:
+            return bal
         self.balance = 0
         for t in self.transactions:
             self.balance += t.getValue()
         return self.balance
 
-    def getName(self):
+    def get_name(self) -> str:
         """
         :return: Name of the account.
         :type: str
         """
-        return self.name
+        return self.name  # type: ignore[return-value]
 
-    def getTransactions(self):
+    def get_transactions(self) -> list[Any]:
         """
         :return: list of transactions in the account.
         :type: list(Transaction)
@@ -52,24 +60,26 @@ class Account(PortfolioPerformanceObject):
         return self.transactions
 
     @staticmethod
-    def parse(content):
-        if 'referencePath' not in content:
-            content['referencePath'] = 'client/accounts/account'
-            
-        if "@reference" in content.keys():
-            return Account(content, content['@reference'])
-        
-        rslt =  Account(content)
+    def parse(content: dict[str, Any]) -> "Account":  # type: ignore[override]
+        if "referencePath" not in content:
+            content["referencePath"] = "client/accounts/account"
+
+        from .classPortfolio import Portfolio  # lazy to avoid circular import
+
+        if "@reference" in content:
+            return Account(content, content["@reference"])
+
+        rslt = Account(content)
         rslt._parseTransactions(content)
-        Portfolio.currentPortfolio.registerUuid(content['uuid'], rslt)
-        
+        Portfolio.currentPortfolio.registerUuid(content["uuid"], rslt)  # type: ignore[attr-defined]
+
         return rslt
-    
-    def _parseTransactions(self, content):
-        if content.get('transactions') is None:
+
+    def _parseTransactions(self, content: dict[str, Any]) -> None:
+        if content.get("transactions") is None:
             return
 
-        txs = content['transactions'].get('account-transaction')
+        txs = content["transactions"].get("account-transaction")
         if txs is None:
             return
 
@@ -82,27 +92,33 @@ class Account(PortfolioPerformanceObject):
                 num += 1
                 continue
 
-            transact['account'] = self
+            transact["account"] = self
 
-            transact['referencePath'] = content['referencePath'] + '/transactions/account-transaction'
+            transact["referencePath"] = (
+                content["referencePath"] + "/transactions/account-transaction"
+            )
             if num > 1:
-                transact['referencePath'] += '[%d]' % num
-            transactionObject = Transaction.parse(transact)
-            if 'uuid' in transact:
-                Portfolio.currentPortfolio.registerUuid(transact['uuid'], transactionObject)
-            self.transactions.append(transactionObject)
+                transact["referencePath"] += f"[{num}]"
+            from .classPortfolio import Portfolio  # lazy to avoid circular import
+            from .classTransaction import Transaction  # lazy to avoid circular import
+
+            transaction_obj = Transaction.parse(transact)
+            if "uuid" in transact:
+                Portfolio.currentPortfolio.registerUuid(  # type: ignore[attr-defined]
+                    transact["uuid"], transaction_obj
+                )
+            self.transactions.append(transaction_obj)
             num += 1
-    
-    def resolveReference(self):
-        super().resolveReference()
+
+    def resolve_reference(self) -> None:
+        super().resolve_reference()
 
         for transaction in self.transactions:
-            transaction.resolveReference()
+            transaction.resolve_reference()
 
-        
-        self._resolveReferencedTransactions()
+        self._resolve_referencedTransactions()
 
-    def _resolveReferencedTransactions(self):
+    def _resolve_referencedTransactions(self) -> None:
         """Resolve <account-transaction> @reference entries to actual objects.
 
         These appear when CSV-imported accounts share transactions across
@@ -111,11 +127,13 @@ class Account(PortfolioPerformanceObject):
         resolved transaction is appended to this account's list (and the
         account is set on the transaction).
         """
-        transactions_node = self.content.get('transactions')
+        from .classPortfolio import Portfolio  # lazy to avoid circular import
+
+        transactions_node = self.content.get("transactions")
         if transactions_node is None:
             return
 
-        txs = transactions_node.get('account-transaction')
+        txs = transactions_node.get("account-transaction")
         if txs is None:
             return
 
@@ -127,29 +145,30 @@ class Account(PortfolioPerformanceObject):
             if not isinstance(transact, dict) or "@reference" not in transact:
                 continue
 
-            ref_path = transact.get('@reference', '')
-            if not ref_path or not ref_path.startswith('../'):
+            ref_path = transact.get("@reference", "")
+            if not ref_path or not ref_path.startswith("../"):
                 continue
 
             # Translate the relative reference into an absolute path
             # rooted at the canonical account-transaction location.
-            parts = ref_path.split('/')
-            abs_parts = ['client', 'accounts', 'account',
-                         'transactions', 'account-transaction']
+            parts = ref_path.split("/")
+            abs_parts = ["client", "accounts", "account", "transactions", "account-transaction"]
             for part in parts:
-                if part == '..':
+                if part == "..":
                     if len(abs_parts) > 1:
                         abs_parts.pop()
                 else:
                     abs_parts.append(part)
-            abs_path = '/'.join(abs_parts)
+            abs_path = "/".join(abs_parts)
 
             try:
-                resolved = Portfolio.currentPortfolio.getObjectByPath(abs_path)
+                resolved = Portfolio.currentPortfolio.getObjectByPath(  # type: ignore[attr-defined]
+                    abs_path
+                )
             except Exception as e:
                 # Path lookup itself failed — surface as repr, do not crash
                 # the rest of the resolution loop.
-                print("Reference lookup failed for %s: %r" % (abs_path, e))
+                print(f"Reference lookup failed for {abs_path}: {e!r}")
                 continue
 
             if resolved is None:
@@ -158,13 +177,12 @@ class Account(PortfolioPerformanceObject):
                 # will retry once depots are also parsed.
                 continue
 
-            if not hasattr(resolved, 'setAccount'):
+            if not hasattr(resolved, "setAccount"):
                 continue
 
             resolved.setAccount(self)
             if resolved not in self.transactions:
                 self.transactions.append(resolved)
-
 
     def __repr__(self) -> str:
         """
@@ -174,9 +192,6 @@ class Account(PortfolioPerformanceObject):
         :return: String representation of the account.
         :type: str
         """
-        if self.name != None:
-            return "Account/%s: %s" % (self.name, self.getBalance())
-        return "Account/%s: %d" % (self.reference, self.getBalance())
-
-from .classTransaction import *
-from .classPortfolio import *
+        if self.name is not None:
+            return f"Account/{self.name}: {self.get_balance()}"
+        return f"Account/{self.reference}: {self.get_balance()}"
