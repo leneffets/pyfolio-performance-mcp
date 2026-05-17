@@ -40,6 +40,67 @@ class Security(PortfolioPerformanceObject):
         if self.wkn is not None:
             Security.security_wkn_map[self.wkn] = self
 
+    @property
+    def ticker_symbol(self) -> str | None:
+        """Ticker symbol (e.g. 'AAPL', 'VGWL.DE', 'BTC'), if set in the XML."""
+        val = self.data.get("tickerSymbol")
+        return val if val else None
+
+    @property
+    def currency_code(self) -> str | None:
+        """Currency code (e.g. 'EUR', 'USD'), if set in the XML."""
+        val = self.data.get("currencyCode")
+        return val if val else None
+
+    def get_custom_attributes(self) -> dict[str, Any]:
+        """Parse <attributes><map><entry> elements into a flat key-value dict.
+
+        Returns typed values:
+        - float  for <double> entries (e.g. ter → 0.0022)
+        - int    for <long> entries   (e.g. aum → 1000000)
+        - str    for <string> entries (e.g. logo → "data:…")
+
+        Mirrors the original Java ``Map<String, Object>`` semantics.
+        """
+        attrs: dict[str, Any] = {}
+        attr_elem = self.data.get("attributes")
+        if not isinstance(attr_elem, dict):
+            return attrs
+        map_elem = attr_elem.get("map")
+        if not isinstance(map_elem, dict):
+            return attrs
+        entries = map_elem.get("entry")
+        if entries is None:
+            return attrs
+        if isinstance(entries, dict):
+            entries = [entries]
+
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            strings = entry.get("string")
+            if strings is None:
+                continue
+
+            key = strings[0] if isinstance(strings, list) else strings
+            if not key:
+                continue
+
+            value: Any = None
+            if isinstance(strings, list) and len(strings) > 1:
+                value = strings[1]
+
+            for typed_key in ("double", "long", "int"):
+                if typed_key in entry:
+                    raw = entry[typed_key]
+                    value = float(raw) if typed_key == "double" else int(raw)
+                    break
+
+            if value is not None:
+                attrs[key] = value
+
+        return attrs
+
     def get_logo(self) -> str | None:
         """
         :return: Logo of the security
@@ -49,19 +110,39 @@ class Security(PortfolioPerformanceObject):
             return self.logo
 
         try:
-            attributes = self.data.get("attributes", {}).get("map", {}).get("entry")
-            if attributes is None:
+            attr_elem = self.data.get("attributes")
+            if not isinstance(attr_elem, dict):
+                return None
+            map_elem = attr_elem.get("map")
+            if not isinstance(map_elem, dict):
+                return None
+            entries = map_elem.get("entry")
+            if entries is None:
                 return None
 
-            string_list = attributes.get("string", [])
-            if isinstance(string_list, list):
-                for string in string_list:
-                    if string == "logo":
-                        continue
-                    self.logo = string
+            if isinstance(entries, dict):
+                entries = [entries]
+
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                strings = entry.get("string")
+                if strings is None:
+                    continue
+
+                key = strings[0] if isinstance(strings, list) else strings
+                # value can be the 2nd <string> or a <double>/<long>
+                value: Any = None
+                if isinstance(strings, list) and len(strings) > 1:
+                    value = strings[1]
+                for typed_key in ("double", "long", "int"):
+                    if typed_key in entry:
+                        value = entry[typed_key]
+                        break
+
+                if key == "logo" and value is not None:
+                    self.logo = str(value)
                     break
-            elif isinstance(string_list, str) and string_list != "logo":
-                self.logo = string_list
         except (KeyError, TypeError):
             pass
 

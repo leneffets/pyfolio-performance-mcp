@@ -99,8 +99,7 @@ The server auto-loads the portfolio on startup from:
 | `get_account_by_name` | Single account by name |
 | `get_depots` | All depots with full security holdings |
 | `get_depot_by_name` | Single depot by name |
-| `get_securities` | All securities with ISIN, WKN, price, value |
-| `get_securities_with_values` | Holdings sorted by value descending |
+| `get_securities` | All securities with ISIN, WKN, price, value, ticker, currency, custom attributes |
 | `get_transactions` | All transactions with depot and account info |
 | `get_transactions_by_type` | Filter by type (BUY, SELL, DIVIDENDS, etc.) |
 | `get_transactions_by_year` | Filter by year |

@@ -23,7 +23,7 @@ The server auto-loads a portfolio from the `PORTFOLIO_FILE` env var or falls bac
 
 ## MCP Tools
 
-ping, load_portfolio, reload_portfolio, get_portfolio_summary, get_accounts, get_account_by_name, get_depots, get_depot_by_name, get_securities, get_securities_with_values, get_security_by_name, get_security_by_isin, get_security_by_wkn, get_security_price_history, get_transactions, get_transactions_by_type, get_transactions_by_year, get_transactions_for_security, get_performance_by_year
+ping, load_portfolio, reload_portfolio, get_portfolio_summary, get_accounts, get_account_by_name, get_depots, get_depot_by_name, get_securities, get_security_by_name, get_security_by_isin, get_security_by_wkn, get_security_price_history, get_transactions, get_transactions_by_type, get_transactions_by_year, get_transactions_for_security, get_performance_by_year
 
 All tools return `dict`. Patterns: `_require_portfolio()` guard, `_to_eur()` / `_price_to_eur()` helpers, snake_case naming, Google-style docstrings.
 
