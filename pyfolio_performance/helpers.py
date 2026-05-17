@@ -29,9 +29,9 @@ def copy_from(self: Any, other: Any) -> None:
 
 class MyCustomClassEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
-        from .classAccount import Account
-        from .classDepot import Depot
-        from .classTransaction import Transaction
+        from .account import Account
+        from .depot import Depot
+        from .transaction import Transaction
 
         if isinstance(obj, Transaction):
             return obj.to_dict()

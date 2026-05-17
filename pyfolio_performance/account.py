@@ -1,7 +1,6 @@
-# ruff: noqa: N999
 from typing import Any
 
-from .classPortfolioPerformanceObject import PortfolioPerformanceObject
+from .portfolio_performance_object import PortfolioPerformanceObject
 
 
 class Account(PortfolioPerformanceObject):
@@ -10,7 +9,7 @@ class Account(PortfolioPerformanceObject):
     """
 
     def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
-        from .classPortfolio import Portfolio  # lazy to avoid circular import
+        from .portfolio import Portfolio  # lazy to avoid circular import
 
         self.transactions: list[Any] = []
         self.uuid: str | None = content.get("uuid")
@@ -63,7 +62,7 @@ class Account(PortfolioPerformanceObject):
         if "referencePath" not in content:
             content["referencePath"] = "client/accounts/account"
 
-        from .classPortfolio import Portfolio  # lazy to avoid circular import
+        from .portfolio import Portfolio  # lazy to avoid circular import
 
         if "@reference" in content:
             return Account(content, content["@reference"])
@@ -98,8 +97,8 @@ class Account(PortfolioPerformanceObject):
             )
             if num > 1:
                 transact["referencePath"] += f"[{num}]"
-            from .classPortfolio import Portfolio  # lazy to avoid circular import
-            from .classTransaction import Transaction  # lazy to avoid circular import
+            from .portfolio import Portfolio  # lazy to avoid circular import
+            from .transaction import Transaction  # lazy to avoid circular import
 
             transaction_obj = Transaction.parse(transact)
             if "uuid" in transact:
@@ -126,7 +125,7 @@ class Account(PortfolioPerformanceObject):
         resolved transaction is appended to this account's list (and the
         account is set on the transaction).
         """
-        from .classPortfolio import Portfolio  # lazy to avoid circular import
+        from .portfolio import Portfolio  # lazy to avoid circular import
 
         transactions_node = self.content.get("transactions")
         if transactions_node is None:

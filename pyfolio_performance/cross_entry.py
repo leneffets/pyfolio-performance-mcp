@@ -1,10 +1,8 @@
-# ruff: noqa: N999
-
 from __future__ import annotations
 
 from typing import Any
 
-from .classPortfolioPerformanceObject import PortfolioPerformanceObject
+from .portfolio_performance_object import PortfolioPerformanceObject
 
 
 class CrossEntry(PortfolioPerformanceObject):
@@ -84,9 +82,9 @@ class CrossEntry(PortfolioPerformanceObject):
 
     @staticmethod
     def parse(content: Any) -> CrossEntry | None:  # type: ignore[override]
-        from .classAccount import Account
-        from .classDepot import Depot
-        from .classTransaction import Transaction
+        from .account import Account
+        from .depot import Depot
+        from .transaction import Transaction
 
         if "@reference" in content:
             return None

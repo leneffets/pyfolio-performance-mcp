@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pyfolio_performance import Filters, Portfolio
-from pyfolio_performance.classTransaction import Transaction
+from pyfolio_performance.transaction import Transaction
 
 portfolio = Portfolio("portfolio.xml")
 current_now = datetime.now()

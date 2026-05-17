@@ -1,15 +1,13 @@
-# ruff: noqa: N999
-
 from __future__ import annotations
 
 import re
 from collections.abc import Callable
 from typing import Any, ClassVar
 
-from .classCrossEntry import CrossEntry
-from .classDateObject import DateObject
-from .classPortfolioPerformanceObject import PortfolioPerformanceObject
-from .classSecurity import Security
+from .cross_entry import CrossEntry
+from .date_object import DateObject
+from .portfolio_performance_object import PortfolioPerformanceObject
+from .security import Security
 
 
 class Transaction(PortfolioPerformanceObject):
@@ -64,7 +62,7 @@ class Transaction(PortfolioPerformanceObject):
     reference_map: ClassVar[dict[str, Transaction]] = {}
 
     def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
-        from .classPortfolio import Portfolio  # lazy to avoid circular import
+        from .portfolio import Portfolio  # lazy to avoid circular import
 
         self.reference = reference
         self.security: Security | None = None

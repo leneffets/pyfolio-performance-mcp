@@ -1,12 +1,12 @@
-from .classCrossEntry import CrossEntry
-from .classDateObject import DateObject
-from .classDepot import Depot
-from .classFilters import Filters
-from .classPortfolio import Portfolio
-from .classPortfolioPerformanceObject import PortfolioPerformanceObject
-from .classSecurity import Security
-from .classTransaction import Transaction
+from .cross_entry import CrossEntry
+from .date_object import DateObject
+from .depot import Depot
+from .filters import Filters
 from .helpers import MyCustomClassEncoder, combine_paths, copy_from
+from .portfolio import Portfolio
+from .portfolio_performance_object import PortfolioPerformanceObject
+from .security import Security
+from .transaction import Transaction
 
 __all__ = [
     "CrossEntry",

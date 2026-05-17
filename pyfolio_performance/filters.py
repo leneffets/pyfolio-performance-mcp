@@ -1,11 +1,9 @@
-# ruff: noqa: N999
-
 from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
 
-from .classDateObject import DateObject
+from .date_object import DateObject
 
 
 class Filters:
@@ -44,7 +42,7 @@ class Filters:
                  Transaction.
         :type: Entry -> bool
         """
-        from .classTransaction import Transaction  # lazy to avoid circular import
+        from .transaction import Transaction  # lazy to avoid circular import
 
         def _is_depot_tx(x: Any) -> bool:
             return isinstance(x, Transaction) and x.has_security()

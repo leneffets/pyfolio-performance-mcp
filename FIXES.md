@@ -26,7 +26,7 @@ Three issues in the original Fix #10 implementation:
 - Dead variables: `base_path` was assigned but unused; `added` counted
   appends but the value was never returned or logged.
 
-**Fix** (`classAccount.py`): wrap dict→list, surface lookup errors via
+**Fix** (`account.py`): wrap dict→list, surface lookup errors via
 `print` (kept silent for the legitimate "not yet registered" case so
 the second pass in `Portfolio.__init__` can retry), drop dead variables,
 clearer control flow with early-`continue` instead of nested ifs.
@@ -38,7 +38,7 @@ positives are realistic: two separate same-day transfers of the same
 amount and same type (e.g. two scheduled standing orders) would collapse
 into one, dropping a real transaction.
 
-**Fix** (`classCrossEntry.py`): dedup by `content['uuid']`, which is
+**Fix** (`cross_entry.py`): dedup by `content['uuid']`, which is
 globally unique in PP. Triple-key kept as fallback for transactions
 without a UUID (defensive, should not occur in real exports).
 
@@ -48,7 +48,7 @@ The original Fix #8 caught `KeyError` and `ValueError` but not
 `TypeError`. If the XML attribute is present but `None` (rare but
 possible), `int(None)` raises `TypeError` and propagates.
 
-**Fix** (`classTransaction.py`): added `TypeError` to the except tuple
+**Fix** (`transaction.py`): added `TypeError` to the except tuple
 in `getValue`, `getAmount`, `getShares`.
 
 ### R3.4 — Defensive `_parseSecurities` / `_parseAccounts` / `_parseDepots`
@@ -58,7 +58,7 @@ no accounts, no portfolios) would crash with KeyError on the chained
 `self.content['client']['securities']['security']` lookup. Unlikely in
 production but free to guard.
 
-**Fix** (`classPortfolio.py`): `.get()`-chained navigation, early return
+**Fix** (`portfolio.py`): `.get()`-chained navigation, early return
 if the section or its child element is missing. Also added a `'uuid' in
 sec` guard in `_parseSecurities` for malformed entries.
 
@@ -74,7 +74,7 @@ Assumed `content['security']` is a dict containing `'@reference'`. If
 the security node lacks the reference attribute (inline security
 without XStream reference), KeyError.
 
-**Fix** (`classTransaction.py`): `.get('@reference')` plus an
+**Fix** (`transaction.py`): `.get('@reference')` plus an
 `isinstance(sec_node, dict)` guard.
 
 ### R3.6 — `Filters.fSecurityTransaction` does not crash on bad paths
@@ -84,7 +84,7 @@ which raises `RuntimeError` on a malformed `securities/security[...]`
 path. Filtering across all transactions could blow up on a single
 bad entry.
 
-**Fix** (`classFilters.py`): wrap in try/except, return `False` on
+**Fix** (`filters.py`): wrap in try/except, return `False` on
 RuntimeError / AttributeError / KeyError so a malformed transaction
 gets filtered out rather than aborting the whole filter sweep.
 
@@ -110,7 +110,7 @@ caller summing `getValue()` over BUY/SELL got double the real value.
 - `total_payin_eur` was unaffected (filters to DEPOSIT/REMOVAL/TRANSFER,
   which either appear only on the account side or self-cancel as +/-).
 
-**Fix** (`classPortfolio.py`): in `getTotalTransactions(TRANSACTION_ALL)`,
+**Fix** (`portfolio.py`): in `getTotalTransactions(TRANSACTION_ALL)`,
 skip the depot-side of BUY/SELL. The cash side is the canonical record;
 share-count math goes through `Depot.getSecurities()` which reads the
 depot transactions directly and is unaffected.
@@ -125,7 +125,7 @@ This was reached for any type not listed in `Transaction.positive` /
 `DELIVERY_OUTBOUND`, which exist in real exports (e.g. spinoffs).
 On depot.xml a single `DELIVERY_INBOUND` aggregated to ~26 trillion EUR.
 
-**Fix** (`classTransaction.py`):
+**Fix** (`transaction.py`):
 - `DELIVERY_INBOUND` → `positive`, `DELIVERY_OUTBOUND` → `negative`, so
   `getValue()` uses the `amount` field directly (PP fills it for delivery
   transactions, e.g. tax basis).
@@ -142,7 +142,7 @@ iterating `content['transactions']['portfolio-transaction']` would walk
 the dict's keys and crash. Also added an `@reference` skip analogous to
 the Account fix.
 
-**Fix** (`classDepot.py`): wrap dict→list, skip reference-only entries,
+**Fix** (`depot.py`): wrap dict→list, skip reference-only entries,
 preserve the index counter for path generation.
 
 ### R2.4 — `DateObject.__repr__` missing zero-padding
@@ -150,7 +150,7 @@ preserve the index counter for path generation.
 `"%d-%d-%d"` produced `"2020-1-7"` instead of `"2020-01-07"`. Strings were
 not ISO 8601 and sorted incorrectly lexicographically.
 
-**Fix** (`classDateObject.py`): `"%04d-%02d-%02d"`.
+**Fix** (`date_object.py`): `"%04d-%02d-%02d"`.
 
 ### R2.5 — `Account.copy_from` missing `content` and `balance`
 
@@ -158,7 +158,7 @@ Inconsistent with `Depot.copy_from`. An Account resolved via `@reference`
 kept the stub `{'@reference': '...'}` as its `content`, and a previously
 cached `balance` was not invalidated.
 
-**Fix** (`classAccount.py`): also call `other.resolveReference()` first,
+**Fix** (`account.py`): also call `other.resolveReference()` first,
 copy `content`, reset `balance = None` so it is recomputed from the
 fresh transaction list.
 
@@ -168,7 +168,7 @@ The loop over the attribute string list assigned `self.logo = string` on
 every non-"logo" entry, so the last one always won. Looks like a
 forgotten `break`.
 
-**Fix** (`classSecurity.py`): `break` after the first non-marker string.
+**Fix** (`security.py`): `break` after the first non-marker string.
 
 ### R2.7 — Cleanup
 
@@ -185,7 +185,7 @@ forgotten `break`.
 
 ## 10 Bug Fixes
 
-### 11. classCrossEntry.py - Missing account-transfer handler
+### 11. cross_entry.py - Missing account-transfer handler
 **Line ~16-17** - Account-transfer crossEntries were completely skipped, causing
 cross-account transfers to only record one side.
 
@@ -235,7 +235,7 @@ def crossEntry_accountTransfer(nextEntry):
             acct_to.transactions.append(tx_to)
 ```
 
-### 10. classAccount.py - CSV reference resolution
+### 10. account.py - CSV reference resolution
 **Line ~100-127** - Fixed path construction for resolving @reference attributes in CSV imports.
 
 ```python
@@ -246,7 +246,7 @@ def _resolveReferencedTransactions(self):
     abs_parts = ['client', 'accounts', 'account', 'transactions', 'account-transaction']
 ```
 
-**Also**: classTransaction.py:7 - Added `TAX_REFUND` to `positive` list.
+**Also**: transaction.py:7 - Added `TAX_REFUND` to `positive` list.
 
 ```python
 positive = ['INTEREST', 'DEPOSIT', 'TRANSFER_IN', 'DIVIDENDS', 'SELL', 'FEES_REFUND', 'TAX_REFUND']
@@ -257,7 +257,7 @@ Without this, TAX_REFUND fell through to `getSecurityBasedValue()` which failed 
 - Balance off by 7 cents (566.10 vs 566.17 EUR)
 - Error messages in output
 
-### 9. classPortfolio.py - Single item handling (dict vs list)
+### 9. portfolio.py - Single item handling (dict vs list)
 **Line ~39, 49, 70** - When only 1 security/account/depot exists, xmltodict returns dict not list.
 
 ```python
@@ -277,7 +277,7 @@ if isinstance(depots, dict):
     depots = [depots]
 ```
 
-### 1. classDepot.py - Null check for transactions
+### 1. depot.py - Null check for transactions
 **Line ~123** - Portfolio without transactions caused crash.
 
 ```python
@@ -287,7 +287,7 @@ def _parseTransactions(self, content):
     # ... rest of method
 ```
 
-### 2. classAccount.py - Skip reference entries + handle single transaction
+### 2. account.py - Skip reference entries + handle single transaction
 **Line ~63** - Prevented duplicate transaction processing and handled single transaction (dict vs list).
 
 ```python
@@ -304,7 +304,7 @@ def _parseTransactions(self, content):
     # ... rest of method
 ```
 
-### 3. classTransaction.py - Keep values in cents
+### 3. transaction.py - Keep values in cents
 **Line ~82-87** - Values are stored in cents (1000000 = 10,000.00 EUR = 1000000 cents).
 
 ```python
@@ -316,14 +316,14 @@ def getValue(self):
         # ... rest of method
 ```
 
-### 4. classSecurity.py - Price scale
+### 4. security.py - Price scale
 **Line ~14** - XML stores prices with 8 decimal places (15398000000 = 153.98 EUR = 1539800 cents).
 
 ```python
 pricescale = 1000000  # scale to cents
 ```
 
-### 5. classSecurity.py - Handle single price (dict vs list)
+### 5. security.py - Handle single price (dict vs list)
 **Line ~62** - When only 1 price exists, xmltodict returns dict not list.
 
 ```python
@@ -331,13 +331,13 @@ if isinstance(priceList, dict):
     priceList = [priceList]
 ```
 
-### 6. classSecurity.py - Improved getLogo error handling
+### 6. security.py - Improved getLogo error handling
 **Line ~31** - Added specific exception handling instead of bare except.
 
-### 7. classPortfolio.py - File handle leak
+### 7. portfolio.py - File handle leak
 **Line ~23** - Use context manager for file handle.
 
-### 8. classTransaction.py - Safer getAmount/getShares
+### 8. transaction.py - Safer getAmount/getShares
 **Line ~100-106** - Added try/except for KeyError/ValueError.
 
 ## Test Files

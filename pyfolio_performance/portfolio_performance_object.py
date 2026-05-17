@@ -1,4 +1,3 @@
-# ruff: noqa: N999
 import re
 from typing import Any
 
@@ -113,7 +112,7 @@ class PortfolioPerformanceObject:
         copy_from(self, other)
 
     def resolve_reference(self) -> None:
-        from .classPortfolio import Portfolio  # lazy to avoid circular import
+        from .portfolio import Portfolio  # lazy to avoid circular import
 
         if self.reference is None:
             return

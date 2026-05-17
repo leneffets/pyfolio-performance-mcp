@@ -1,9 +1,8 @@
-# ruff: noqa: N999
 from typing import Any
 
 import xmltodict
 
-from .classSecurity import Security
+from .security import Security
 
 
 class Portfolio:
@@ -298,9 +297,9 @@ class Portfolio:
             clusters[cluster_id] = fn_aggregation(clusters[cluster_id], transact)
 
 
-from pyfolio_performance.classFilters import Filters  # noqa: E402
+from pyfolio_performance.filters import Filters  # noqa: E402
 
-from .classAccount import Account  # noqa: E402
-from .classCrossEntry import CrossEntry  # noqa: E402
-from .classDepot import Depot  # noqa: E402
-from .classTransaction import Transaction  # noqa: E402
+from .account import Account  # noqa: E402
+from .cross_entry import CrossEntry  # noqa: E402
+from .depot import Depot  # noqa: E402
+from .transaction import Transaction  # noqa: E402

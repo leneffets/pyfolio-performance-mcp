@@ -1,7 +1,6 @@
-# ruff: noqa: N999
 from typing import Any
 
-from .classPortfolioPerformanceObject import PortfolioPerformanceObject
+from .portfolio_performance_object import PortfolioPerformanceObject
 
 
 class Depot(PortfolioPerformanceObject):
@@ -16,7 +15,7 @@ class Depot(PortfolioPerformanceObject):
 
     def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
         self.reference = reference
-        from .classPortfolio import Portfolio  # lazy to avoid circular import
+        from .portfolio import Portfolio  # lazy to avoid circular import
 
         self.transactions: list[Any] = []
         self.depotSecurities: dict[str, Any] | None = None
@@ -111,7 +110,7 @@ class Depot(PortfolioPerformanceObject):
 
     @staticmethod
     def parse(content: dict[str, Any]) -> "Depot":  # type: ignore[override]
-        from .classAccount import Account  # lazy to avoid circular import
+        from .account import Account  # lazy to avoid circular import
 
         if "@reference" in content:
             return Depot(content, content["@reference"])
@@ -160,8 +159,8 @@ class Depot(PortfolioPerformanceObject):
                     content["referencePath"] + f"/transactions/portfolio-transaction[{num}]"
                 )
             transact["account"] = None
-            from .classPortfolio import Portfolio  # lazy to avoid circular import
-            from .classTransaction import Transaction  # lazy to avoid circular import
+            from .portfolio import Portfolio  # lazy to avoid circular import
+            from .transaction import Transaction  # lazy to avoid circular import
 
             transaction_obj = Transaction.parse(transact)
             if "uuid" in transact:

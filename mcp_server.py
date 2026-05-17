@@ -12,8 +12,8 @@ from typing import Any
 from fastmcp import FastMCP
 
 from pyfolio_performance import Portfolio, reset
-from pyfolio_performance.classSecurity import Security
-from pyfolio_performance.classTransaction import Transaction
+from pyfolio_performance.security import Security
+from pyfolio_performance.transaction import Transaction
 
 mcp = FastMCP("Portfolio Performance")
 
