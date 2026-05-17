@@ -2,7 +2,7 @@
 import re
 from typing import Any
 
-from .helpers import combinePaths, copy_from
+from .helpers import combine_paths, copy_from
 
 _array_regex = re.compile(r"\[(\d+)\]$")
 
@@ -117,9 +117,9 @@ class PortfolioPerformanceObject:
 
         if self.reference is None:
             return
-        combined = combinePaths(self.content["referencePath"], self.reference)
+        combined = combine_paths(self.content["referencePath"], self.reference)
 
-        other = Portfolio.currentPortfolio.getObjectByPath(combined)  # type: ignore[attr-defined]
+        other = Portfolio.currentPortfolio.get_object_by_path(combined)  # type: ignore[attr-defined]
         if other is None:
             raise RuntimeError(
                 f"Cannot resolve reference [{self.__class__}]: "

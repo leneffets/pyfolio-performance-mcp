@@ -71,7 +71,7 @@ class Transaction(PortfolioPerformanceObject):
         self.content = content
 
         Transaction.reference_map[content["referencePath"]] = self
-        Portfolio.currentPortfolio.registerPath(  # type: ignore[attr-defined]
+        Portfolio.currentPortfolio.register_path(  # type: ignore[attr-defined]
             content["referencePath"],
             self,
         )

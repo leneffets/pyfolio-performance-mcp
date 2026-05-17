@@ -1,4 +1,4 @@
-# ruff: noqa: N802, N999
+# ruff: noqa: N999
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ class Filters:
     """
 
     @staticmethod
-    def fEnsureTypeList(typelist: list[str]) -> Callable[[Any], bool]:
+    def f_ensure_type_list(typelist: list[str]) -> Callable[[Any], bool]:
         """
         :param typelist: List of types that are required by the filter.
         :type typelist: list(str)
@@ -26,7 +26,7 @@ class Filters:
         return lambda x: x.type in typelist
 
     @staticmethod
-    def fExcludeTypeList(typelist: list[str]) -> Callable[[Any], bool]:
+    def f_exclude_type_list(typelist: list[str]) -> Callable[[Any], bool]:
         """
         :param typelist: List of types that are not allowed by the filter.
         :type typelist: list(str)
@@ -38,7 +38,7 @@ class Filters:
         return lambda x: x.type not in typelist
 
     @staticmethod
-    def fDepotTransaction() -> Callable[[Any], bool]:
+    def f_depot_transaction() -> Callable[[Any], bool]:
         """
         :return: A filter function that ensures the entry is a Depot
                  Transaction.
@@ -52,7 +52,7 @@ class Filters:
         return _is_depot_tx
 
     @staticmethod
-    def fSecurityTransaction(sec: Any) -> Callable[[Any], bool]:
+    def f_security_transaction(sec: Any) -> Callable[[Any], bool]:
         """
         :param sec: A security to filter for.
         :type sec: Security
@@ -71,7 +71,7 @@ class Filters:
         return _matches
 
     @staticmethod
-    def fBefore(date: DateObject) -> Callable[[Any], bool]:
+    def f_before(date: DateObject) -> Callable[[Any], bool]:
         """
         :param year: The date to filter for.
         :type year: DateObject
@@ -95,7 +95,7 @@ class Filters:
         return _before
 
     @staticmethod
-    def fYear(year: int) -> Callable[[Any], bool]:
+    def f_year(year: int) -> Callable[[Any], bool]:
         """
         :param year: The year to filter for.
         :type year: int
@@ -107,7 +107,7 @@ class Filters:
         return lambda x: x.get_year() == year
 
     @staticmethod
-    def fMonth(month: int) -> Callable[[Any], bool]:
+    def f_month(month: int) -> Callable[[Any], bool]:
         """
         :param month: The month to filter for.
         :type month: int
@@ -119,7 +119,7 @@ class Filters:
         return lambda x: x.get_month() == month
 
     @staticmethod
-    def fDay(day: int) -> Callable[[Any], bool]:
+    def f_day(day: int) -> Callable[[Any], bool]:
         """
         :param day: The day to filter for.
         :type day: int
@@ -131,7 +131,7 @@ class Filters:
         return lambda x: x.get_day() == day
 
     @staticmethod
-    def fAnd(f1: Callable[[Any], bool], f2: Callable[[Any], bool]) -> Callable[[Any], bool]:
+    def f_and(f1: Callable[[Any], bool], f2: Callable[[Any], bool]) -> Callable[[Any], bool]:
         """
         :param f1: First function.
         :type: function entry -> bool
@@ -146,7 +146,7 @@ class Filters:
         return lambda x: f1(x) and f2(x)
 
     @staticmethod
-    def fOr(f1: Callable[[Any], bool], f2: Callable[[Any], bool]) -> Callable[[Any], bool]:
+    def f_or(f1: Callable[[Any], bool], f2: Callable[[Any], bool]) -> Callable[[Any], bool]:
         """
         :param f1: First function.
         :type: function entry -> bool

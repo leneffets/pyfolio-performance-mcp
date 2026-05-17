@@ -100,7 +100,7 @@ class Security(PortfolioPerformanceObject):
             if isinstance(price, str):  # skip the text elements
                 continue
             price_date = DateObject(price["@t"])
-            if price_date.getOrderValue() < newest_date.getOrderValue():
+            if price_date.get_order_value() < newest_date.get_order_value():
                 continue
             newest_date = price_date
             newest_xml = price

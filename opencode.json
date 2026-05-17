@@ -9,5 +9,11 @@
       },
       "enabled": true
     }
+  },
+  "lsp": {
+    "python": {
+      "command": ["./venv/bin/ruff", "server"],
+      "enabled": true
+    }
   }
 }

@@ -11,8 +11,8 @@ def filter_month(entry: Transaction, month: int, year: int) -> bool:
     return year == entry.get_year() and month == entry.get_month()
 
 
-filter_dividend = Filters.fAnd(
-    Filters.fEnsureTypeList(["DIVIDENDS"]),
+filter_dividend = Filters.f_and(
+    Filters.f_ensure_type_list(["DIVIDENDS"]),
     lambda entry: filter_month(entry, current_now.month, current_now.year),
 )
 
@@ -27,7 +27,7 @@ def aggregate_dividend(cluster: int | float, entry: Transaction) -> int | float:
 
 
 divicluster: dict[str, int] = {"val": 0}
-portfolio.evaluateCluster(divicluster, filter_dividend, cluster_dividend, aggregate_dividend)
+portfolio.evaluate_cluster(divicluster, filter_dividend, cluster_dividend, aggregate_dividend)
 print(divicluster)
 
 
@@ -40,5 +40,5 @@ def cluster_dividend2(all_cluster: dict[str, int], entry: Transaction) -> str:
 
 
 divicluster2: dict[str, int] = {}
-portfolio.evaluateCluster(divicluster2, filter_dividend, cluster_dividend2, aggregate_dividend)
+portfolio.evaluate_cluster(divicluster2, filter_dividend, cluster_dividend2, aggregate_dividend)
 print(divicluster2)

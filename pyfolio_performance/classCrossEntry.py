@@ -1,4 +1,4 @@
-# ruff: noqa: N802, N803, N806, N815, N999
+# ruff: noqa: N999
 
 from __future__ import annotations
 
@@ -8,50 +8,50 @@ from .classPortfolioPerformanceObject import PortfolioPerformanceObject
 
 
 class CrossEntry(PortfolioPerformanceObject):
-    crossEntryQueue: list[Any] = []
+    cross_entry_queue: list[Any] = []
 
     @staticmethod
-    def processCrossEntries() -> None:
-        while len(CrossEntry.crossEntryQueue) > 0:
-            nextEntry = CrossEntry.crossEntryQueue.pop()
+    def process_cross_entries() -> None:
+        while len(CrossEntry.cross_entry_queue) > 0:
+            next_entry = CrossEntry.cross_entry_queue.pop()
 
-            if nextEntry.content["@class"] == "portfolio-transfer":
-                CrossEntry.crossEntry_portfolioTransfer(nextEntry)
-            elif nextEntry.content["@class"] == "buysell":
-                CrossEntry.crossEntry_buysell(nextEntry)
-            elif nextEntry.content["@class"] == "account-transfer":
-                CrossEntry.crossEntry_accountTransfer(nextEntry)
+            if next_entry.content["@class"] == "portfolio-transfer":
+                CrossEntry.cross_entry_portfolio_transfer(next_entry)
+            elif next_entry.content["@class"] == "buysell":
+                CrossEntry.cross_entry_buysell(next_entry)
+            elif next_entry.content["@class"] == "account-transfer":
+                CrossEntry.cross_entry_account_transfer(next_entry)
 
     @staticmethod
-    def crossEntry_buysell(nextEntry: Any) -> None:
-        otherDepot = nextEntry.content["portfolio"]
-        transaction = nextEntry.content["portfolioTransaction"]
-        if otherDepot is None or transaction is None:
+    def cross_entry_buysell(next_entry: Any) -> None:
+        other_depot = next_entry.content["portfolio"]
+        transaction = next_entry.content["portfolioTransaction"]
+        if other_depot is None or transaction is None:
             return
         if transaction.reference is not None:
             return
 
-        otherDepot.resolve_reference()
+        other_depot.resolve_reference()
         transaction.resolve_reference()
-        otherDepot.transactions.append(transaction)
+        other_depot.transactions.append(transaction)
 
     @staticmethod
-    def crossEntry_portfolioTransfer(nextEntry: Any) -> None:
-        otherDepot = nextEntry.content["portfolioFrom"]
-        transactionFrom = nextEntry.content["transactionFrom"]
-        if otherDepot is None or transactionFrom is None:
+    def cross_entry_portfolio_transfer(next_entry: Any) -> None:
+        other_depot = next_entry.content["portfolioFrom"]
+        transaction_from = next_entry.content["transactionFrom"]
+        if other_depot is None or transaction_from is None:
             return
 
-        otherDepot.resolve_reference()
-        transactionFrom.resolve_reference()
-        otherDepot.transactions.append(transactionFrom)
+        other_depot.resolve_reference()
+        transaction_from.resolve_reference()
+        other_depot.transactions.append(transaction_from)
 
     @staticmethod
-    def crossEntry_accountTransfer(nextEntry: Any) -> None:
-        acct_from = nextEntry.content.get("accountFrom")
-        acct_to = nextEntry.content.get("accountTo")
-        tx_from = nextEntry.content.get("transactionFrom")
-        tx_to = nextEntry.content.get("transactionTo")
+    def cross_entry_account_transfer(next_entry: Any) -> None:
+        account_from = next_entry.content.get("accountFrom")
+        account_to = next_entry.content.get("accountTo")
+        tx_from = next_entry.content.get("transactionFrom")
+        tx_to = next_entry.content.get("transactionTo")
 
         def _already_exists(tx: Any, account: Any) -> bool:
             new_uuid = tx.content.get("uuid") if hasattr(tx, "content") else None
@@ -70,17 +70,17 @@ class CrossEntry(PortfolioPerformanceObject):
                     return True
             return False
 
-        if acct_from and tx_from:
-            acct_from.resolve_reference()
+        if account_from and tx_from:
+            account_from.resolve_reference()
             tx_from.resolve_reference()
-            if not _already_exists(tx_from, acct_from):
-                acct_from.transactions.append(tx_from)
+            if not _already_exists(tx_from, account_from):
+                account_from.transactions.append(tx_from)
 
-        if acct_to and tx_to:
-            acct_to.resolve_reference()
+        if account_to and tx_to:
+            account_to.resolve_reference()
             tx_to.resolve_reference()
-            if not _already_exists(tx_to, acct_to):
-                acct_to.transactions.append(tx_to)
+            if not _already_exists(tx_to, account_to):
+                account_to.transactions.append(tx_to)
 
     @staticmethod
     def parse(content: Any) -> CrossEntry | None:  # type: ignore[override]
@@ -132,9 +132,9 @@ class CrossEntry(PortfolioPerformanceObject):
             )
             content["portfolioTransaction"] = Transaction.parse(content["portfolioTransaction"])
 
-        crossEntry = CrossEntry(content)
-        CrossEntry.crossEntryQueue.append(crossEntry)
-        return crossEntry
+        cross_entry = CrossEntry(content)
+        CrossEntry.cross_entry_queue.append(cross_entry)
+        return cross_entry
 
     def __init__(self, content: Any) -> None:
         self.content = content

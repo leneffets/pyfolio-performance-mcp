@@ -1,4 +1,4 @@
-# ruff: noqa: N802, N803, N999
+# ruff: noqa: N999
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ class DateObject:
     :param dateStr: Date string as used by portfolio performance in the XML.
     """
 
-    def __init__(self, dateStr: str) -> None:
-        self.date = dateStr
+    def __init__(self, date_str: str) -> None:
+        self.date = date_str
 
     def get_year(self) -> int:
         """
@@ -34,10 +34,10 @@ class DateObject:
         """
         return int(self.date[8:10])
 
-    def getOrderValue(self) -> int:
+    def get_order_value(self) -> int:
         """
-        Used to order dates. Gives a comparable int s.t. `getOrderValue(a) <
-        getOrderValue(b)` iff the date `a` was before the date `b`.
+        Used to order dates. Gives a comparable int s.t. `get_order_value(a) <
+        get_order_value(b)` iff the date `a` was before the date `b`.
         :return: Returns an int representing the position in an order of the
                  date.
         :type: int

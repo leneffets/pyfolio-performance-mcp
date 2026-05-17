@@ -1,8 +1,7 @@
+# ruff: noqa: N999
 from typing import Any
 
 from .classPortfolioPerformanceObject import PortfolioPerformanceObject
-
-# ruff: noqa: N802, N999
 
 
 class Account(PortfolioPerformanceObject):
@@ -19,7 +18,7 @@ class Account(PortfolioPerformanceObject):
         self.content = content
         self.balance: int | None = None
         self.reference = reference
-        Portfolio.currentPortfolio.registerPath(content["referencePath"], self)  # type: ignore[attr-defined]
+        Portfolio.currentPortfolio.register_path(content["referencePath"], self)  # type: ignore[attr-defined]
 
     def copy_from(self, other: "Account") -> None:
         other.resolve_reference()
@@ -70,12 +69,12 @@ class Account(PortfolioPerformanceObject):
             return Account(content, content["@reference"])
 
         rslt = Account(content)
-        rslt._parseTransactions(content)
-        Portfolio.currentPortfolio.registerUuid(content["uuid"], rslt)  # type: ignore[attr-defined]
+        rslt._parse_transactions(content)
+        Portfolio.currentPortfolio.register_uuid(content["uuid"], rslt)  # type: ignore[attr-defined]
 
         return rslt
 
-    def _parseTransactions(self, content: dict[str, Any]) -> None:
+    def _parse_transactions(self, content: dict[str, Any]) -> None:
         if content.get("transactions") is None:
             return
 
@@ -104,7 +103,7 @@ class Account(PortfolioPerformanceObject):
 
             transaction_obj = Transaction.parse(transact)
             if "uuid" in transact:
-                Portfolio.currentPortfolio.registerUuid(  # type: ignore[attr-defined]
+                Portfolio.currentPortfolio.register_uuid(  # type: ignore[attr-defined]
                     transact["uuid"], transaction_obj
                 )
             self.transactions.append(transaction_obj)
@@ -116,9 +115,9 @@ class Account(PortfolioPerformanceObject):
         for transaction in self.transactions:
             transaction.resolve_reference()
 
-        self._resolve_referencedTransactions()
+        self._resolve_referenced_transactions()
 
-    def _resolve_referencedTransactions(self) -> None:
+    def _resolve_referenced_transactions(self) -> None:
         """Resolve <account-transaction> @reference entries to actual objects.
 
         These appear when CSV-imported accounts share transactions across
@@ -162,7 +161,7 @@ class Account(PortfolioPerformanceObject):
             abs_path = "/".join(abs_parts)
 
             try:
-                resolved = Portfolio.currentPortfolio.getObjectByPath(  # type: ignore[attr-defined]
+                resolved = Portfolio.currentPortfolio.get_object_by_path(  # type: ignore[attr-defined]
                     abs_path
                 )
             except Exception as e:

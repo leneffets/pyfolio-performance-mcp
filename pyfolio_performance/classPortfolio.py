@@ -1,10 +1,9 @@
+# ruff: noqa: N999
 from typing import Any
 
 import xmltodict
 
 from .classSecurity import Security
-
-# ruff: noqa: N802, N999
 
 
 class Portfolio:
@@ -40,7 +39,7 @@ class Portfolio:
         Security.most_recent_value = None
         Transaction.reference_map.clear()
         Depot.depot_map.clear()
-        CrossEntry.crossEntryQueue.clear()
+        CrossEntry.cross_entry_queue.clear()
         Portfolio.uuid_map.clear()
         Portfolio.path_map.clear()
         Portfolio.parent_map.clear()
@@ -55,18 +54,18 @@ class Portfolio:
             xml_content = f.read()
         self.content = xmltodict.parse(xml_content)
 
-        self._parseSecurities()  # needs to be done first
-        self._parseAccounts()
-        self._parseDepots()
-        CrossEntry.processCrossEntries()
+        self._parse_securities()  # needs to be done first
+        self._parse_accounts()
+        self._parse_depots()
+        CrossEntry.process_cross_entries()
 
         for dep in self.depotList:
             dep.resolve_reference()
-            dep.clearDuplicateTransactions()
+            dep.clear_duplicate_transactions()
         for acc in self.accList:
             acc.resolve_reference()
 
-    def _parseSecurities(self) -> None:
+    def _parse_securities(self) -> None:
         self.securityList = []
 
         client = self.content.get("client") or {}
@@ -85,7 +84,7 @@ class Portfolio:
                 self.uuid_map[sec["uuid"]] = sec_obj
             self.securityList.append(sec_obj)
 
-    def _parseAccounts(self) -> None:
+    def _parse_accounts(self) -> None:
         self.accList = []
 
         num = 1
@@ -111,7 +110,7 @@ class Portfolio:
         for acc in self.accList:
             acc.resolve_reference()
 
-    def _parseDepots(self) -> None:
+    def _parse_depots(self) -> None:
         self.depotList = []
 
         num = 1
@@ -137,15 +136,15 @@ class Portfolio:
         for dep in self.depotList:
             dep.resolve_reference()
 
-    def registerUuid(self, uuid: str, obj: Any) -> None:
+    def register_uuid(self, uuid: str, obj: Any) -> None:
         if uuid is not None:
             self.uuid_map[uuid] = obj
 
-    def registerPath(self, path: str, obj: Any) -> None:
+    def register_path(self, path: str, obj: Any) -> None:
         if path is not None:
             self.path_map[path] = obj
 
-    def getObjectByPath(self, path: str) -> Any:
+    def get_object_by_path(self, path: str) -> Any:
         if path in self.path_map:
             return self.path_map[path]
         return None
@@ -231,7 +230,7 @@ class Portfolio:
                 total_transactions.extend(acc.get_transactions())
         return total_transactions
 
-    def getInvestmentInto(self, security: Any, before: Any = None) -> int:
+    def get_investment_into(self, security: Any, before: Any = None) -> int:
         """
         Computes how much is invested into a specific security before a
         given date. If no date is given, the total investment is calculated.
@@ -240,9 +239,9 @@ class Portfolio:
         :type: int
         """
         clusters: dict[str, int] = {"value": 0}
-        my_filter = Filters.fSecurityTransaction(security)
+        my_filter = Filters.f_security_transaction(security)
         if before is not None:
-            my_filter = Filters.fAnd(my_filter, Filters.fDate(before, None))  # type: ignore[attr-defined]
+            my_filter = Filters.f_and(my_filter, Filters.fDate(before, None))  # type: ignore[attr-defined]
 
         def fn_cluster(x: Any, y: Any) -> str:
             return "value"
@@ -250,11 +249,11 @@ class Portfolio:
         def fn_aggregate(x: Any, y: Any) -> Any:
             return x + y.getValue()
 
-        self.evaluateCluster(clusters, my_filter, fn_cluster, fn_aggregate)
+        self.evaluate_cluster(clusters, my_filter, fn_cluster, fn_aggregate)
 
         return clusters["value"]
 
-    def evaluateCluster(
+    def evaluate_cluster(
         self,
         clusters: dict[str, Any],
         fn_filter: Any,

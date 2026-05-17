@@ -1,25 +1,23 @@
-# ruff: noqa: N802, N806
-
 from __future__ import annotations
 
 import json
 from typing import Any
 
 
-def combinePaths(absolute: str, relative: str) -> str:
-    absoluteSplit = absolute.split("/")
-    relativeSplit = relative.split("/")
+def combine_paths(absolute: str, relative: str) -> str:
+    absolute_split = absolute.split("/")
+    relative_split = relative.split("/")
 
-    toRemove = 0
-    for i in range(len(relativeSplit)):
-        if relativeSplit[i] == "..":
-            toRemove += 1
+    to_remove = 0
+    for i in range(len(relative_split)):
+        if relative_split[i] == "..":
+            to_remove += 1
         else:
             break
 
-    absoluteSplit = absoluteSplit[:-toRemove]
-    relativeSplit = relativeSplit[toRemove:]
-    return "/".join(absoluteSplit + relativeSplit)
+    absolute_split = absolute_split[:-to_remove]
+    relative_split = relative_split[to_remove:]
+    return "/".join(absolute_split + relative_split)
 
 
 def copy_from(self: Any, other: Any) -> None:

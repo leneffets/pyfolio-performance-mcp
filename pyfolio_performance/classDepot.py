@@ -1,8 +1,7 @@
+# ruff: noqa: N999
 from typing import Any
 
 from .classPortfolioPerformanceObject import PortfolioPerformanceObject
-
-# ruff: noqa: N802, N815, N999
 
 
 class Depot(PortfolioPerformanceObject):
@@ -10,9 +9,9 @@ class Depot(PortfolioPerformanceObject):
     The class that manages a depot and its transactions.
     """
 
-    referenceSkip = 6
+    reference_skip = 6
     depot_map: dict[str, "Depot"] = {}
-    currentDepot = None
+    current_depot = None
     scale = 100000000
 
     def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
@@ -24,7 +23,7 @@ class Depot(PortfolioPerformanceObject):
         self.content = content
         self.name = ""
         self.uuid = ""
-        Portfolio.currentPortfolio.registerPath(content["referencePath"], self)  # type: ignore[attr-defined]
+        Portfolio.currentPortfolio.register_path(content["referencePath"], self)  # type: ignore[attr-defined]
 
         if reference is not None:
             return
@@ -32,7 +31,7 @@ class Depot(PortfolioPerformanceObject):
         self.name = content["name"]
         self.uuid = content["uuid"]
         Depot.depot_map[self.name] = self
-        Portfolio.currentPortfolio.registerUuid(content["uuid"], self)  # type: ignore[attr-defined]
+        Portfolio.currentPortfolio.register_uuid(content["uuid"], self)  # type: ignore[attr-defined]
 
     def copy_from(self, other: "Depot") -> None:
         other.resolve_reference()
@@ -58,7 +57,7 @@ class Depot(PortfolioPerformanceObject):
         return self.name
 
     @staticmethod
-    def getDepotByName(name: str) -> "Depot | None":
+    def get_depot_by_name(name: str) -> "Depot | None":
         """
         :param: Name of the depot that should be returned
         :type: str
@@ -94,7 +93,7 @@ class Depot(PortfolioPerformanceObject):
 
         return self.depotSecurities
 
-    def clearDuplicateTransactions(self) -> None:
+    def clear_duplicate_transactions(self) -> None:
         """
         This method is used to remove duplicate transactions from the depot.
         """
@@ -118,7 +117,7 @@ class Depot(PortfolioPerformanceObject):
             return Depot(content, content["@reference"])
 
         rslt = Depot(content)
-        rslt._parseTransactions(content)
+        rslt._parse_transactions(content)
 
         if "referenceAccount" in content:
             content["referenceAccount"]["referencePath"] = (
@@ -128,7 +127,7 @@ class Depot(PortfolioPerformanceObject):
 
         return rslt
 
-    def _parseTransactions(self, content: dict[str, Any]) -> None:
+    def _parse_transactions(self, content: dict[str, Any]) -> None:
         if content.get("transactions") is None:
             return
 
@@ -166,7 +165,7 @@ class Depot(PortfolioPerformanceObject):
 
             transaction_obj = Transaction.parse(transact)
             if "uuid" in transact:
-                Portfolio.currentPortfolio.registerUuid(  # type: ignore[attr-defined]
+                Portfolio.currentPortfolio.register_uuid(  # type: ignore[attr-defined]
                     transact["uuid"], transaction_obj
                 )
             self.transactions.append(transaction_obj)

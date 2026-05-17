@@ -6,7 +6,7 @@ from .classPortfolio import Portfolio
 from .classPortfolioPerformanceObject import PortfolioPerformanceObject
 from .classSecurity import Security
 from .classTransaction import Transaction
-from .helpers import MyCustomClassEncoder, combinePaths, copy_from
+from .helpers import MyCustomClassEncoder, combine_paths, copy_from
 
 __all__ = [
     "CrossEntry",
@@ -18,7 +18,7 @@ __all__ = [
     "Security",
     "Transaction",
     "MyCustomClassEncoder",
-    "combinePaths",
+    "combine_paths",
     "copy_from",
 ]
 
