@@ -12,7 +12,7 @@
   },
   "lsp": {
     "python": {
-      "command": ["./venv/bin/ruff", "server"],
+      "command": ["./venv/bin/pylsp"],
       "enabled": true
     }
   }
