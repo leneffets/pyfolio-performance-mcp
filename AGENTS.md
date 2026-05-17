@@ -33,7 +33,8 @@ Define a function with `@mcp.tool`, type-annotated params, and a docstring. Fast
 
 ## OpenCode Config
 
-`opencode.json` registers the server:
+`opencode.json` registers both the MCP server and the Python LSP:
+
 ```json
 {
   "mcp": {
@@ -43,9 +44,17 @@ Define a function with `@mcp.tool`, type-annotated params, and a docstring. Fast
       "environment": { "PORTFOLIO_FILE": "kommer.xml" },
       "enabled": true
     }
+  },
+  "lsp": {
+    "python": {
+      "command": ["./venv/bin/pylsp"],
+      "enabled": true
+    }
   }
 }
 ```
+
+The LSP provides type checking (via pylsp-mypy), go-to-definition, hover docstrings, and auto-completion directly in OpenCode's chat interface.
 
 ## Privacy Policy
 
@@ -62,6 +71,7 @@ Configured in `pyproject.toml` (ruff + mypy) and `.vscode/settings.json`.
 | **ruff** | Linter + formatter | Style violations, unused imports, `== None`, dead code, long lines |
 | **Pylance** | Type checker (in-editor) | Wrong types, missing returns, None-safety |
 | **mypy** | Type checker (CLI) | Same as Pylance but runnable in CI, stricter |
+| **pylsp** | OpenCode LSP | Wraps mypy for type checking + Jedi for IDE features |
 
 ### VS Code workflow
 
