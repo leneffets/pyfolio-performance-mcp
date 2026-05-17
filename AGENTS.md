@@ -48,6 +48,7 @@ Define a function with `@mcp.tool`, type-annotated params, and a docstring. Fast
   "lsp": {
     "python": {
       "command": ["./venv/bin/pylsp"],
+      "extensions": [".py"],
       "enabled": true
     }
   }
