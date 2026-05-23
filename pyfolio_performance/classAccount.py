@@ -131,18 +131,16 @@ class Account(PortfolioPerformanceObject):
             if not ref_path or not ref_path.startswith('../'):
                 continue
 
-            # Translate the relative reference into an absolute path
-            # rooted at the canonical account-transaction location.
-            parts = ref_path.split('/')
-            abs_parts = ['client', 'accounts', 'account',
-                         'transactions', 'account-transaction']
-            for part in parts:
-                if part == '..':
-                    if len(abs_parts) > 1:
-                        abs_parts.pop()
-                else:
-                    abs_parts.append(part)
-            abs_path = '/'.join(abs_parts)
+            # Translate the relative reference into an absolute path.
+            # The base must be the referencePath of the current account-transaction
+            # node (not a hardcoded root), so that nested accounts (e.g. those
+            # stored inside crossEntry/accountTo) resolve correctly.
+            # We use the same combinePaths() helper used everywhere else.
+            #
+            # The @reference on a transaction node is relative to that node itself,
+            # so the base is:  <account.referencePath>/transactions/account-transaction
+            account_tx_base = self.content['referencePath'] + '/transactions/account-transaction'
+            abs_path = combinePaths(account_tx_base, ref_path)
 
             try:
                 resolved = Portfolio.currentPortfolio.getObjectByPath(abs_path)
