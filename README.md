@@ -63,7 +63,7 @@ for depot in portPerf.getDepots():
         print(f"{sec.getName()}: {shares} shares @ {sec.getMostRecentValue()/100} EUR")
 ```
 
-## MCP Server
+## Portfolio Performance MCP Server
 
 This project includes an MCP (Model Context Protocol) server that exposes your Portfolio Performance data to AI agents for investment analysis and advice.
 
@@ -129,6 +129,55 @@ Add this to your project `opencode.json`:
 ```
 
 Then run opencode from the project directory. The portfolio auto-loads on startup.
+
+## ExtraETF MCP Server
+
+A lightweight MCP server that fetches ETF holdings, factsheets, allocations, and dividend data from [extraetf.com](https://extraetf.com). No API key needed — data is extracted from the ETF profile page.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_etf_holdings` | Top holdings with ISIN, weight, sector, country |
+| `get_etf_factsheet` | TER, fund size, replication, performance, risk metrics |
+| `get_etf_allocation` | Country, region, sector, currency, asset class breakdown |
+| `get_etf_dividends` | Dividend history, yields, CAGR |
+| `ping` | Health check |
+
+### OpenCode Integration
+
+Add a second MCP server to `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "portfolio": { ... },
+    "extraetf": {
+      "type": "local",
+      "command": ["./venv/bin/python", "extraetf_server.py"],
+      "enabled": true
+    }
+  }
+}
+```
+
+## yfinance MCP server
+
+[yfinance](https://github.com/narumiruna/yfinance-mcp) pairs well with this project — get prices, fundamentals, and news for individual stocks alongside your portfolio and ETF data.
+
+```
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "yfinance": {
+      "type": "local",
+      "command": ["docker", "run", "-i", "--rm", "narumi/yfinance-mcp"],
+      "enabled": true
+    }
+  }
+}
+```
 
 ## Sample Prompt
 
