@@ -112,8 +112,6 @@ class PortfolioPerformanceObject:
         copy_from(self, other)
 
     def resolve_reference(self) -> None:
-        from .portfolio import Portfolio  # lazy to avoid circular import
-
         if self.reference is None:
             return
         combined = combine_paths(self.content["referencePath"], self.reference)
@@ -128,3 +126,5 @@ class PortfolioPerformanceObject:
             )
 
         self.copy_from(other)
+
+from .portfolio import Portfolio  # noqa: E402

@@ -42,7 +42,6 @@ class Filters:
                  Transaction.
         :type: Entry -> bool
         """
-        from .transaction import Transaction  # lazy to avoid circular import
 
         def _is_depot_tx(x: Any) -> bool:
             return isinstance(x, Transaction) and x.has_security()
@@ -157,3 +156,5 @@ class Filters:
         :type: Entry -> bool
         """
         return lambda x: f1(x) or f2(x)
+
+from .transaction import Transaction  # noqa: E402

@@ -1,5 +1,6 @@
 from typing import Any
 
+from .helpers import combine_paths
 from .portfolio_performance_object import PortfolioPerformanceObject
 
 
@@ -9,8 +10,6 @@ class Account(PortfolioPerformanceObject):
     """
 
     def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
-        from .portfolio import Portfolio  # lazy to avoid circular import
-
         self.transactions: list[Any] = []
         self.uuid: str | None = content.get("uuid")
         self.name: str | None = content.get("name")
@@ -40,7 +39,7 @@ class Account(PortfolioPerformanceObject):
             return bal
         self.balance = 0
         for t in self.transactions:
-            self.balance += t.getValue()
+            self.balance += t.get_value()
         return self.balance
 
     def get_name(self) -> str:
@@ -61,8 +60,6 @@ class Account(PortfolioPerformanceObject):
     def parse(content: dict[str, Any]) -> "Account":  # type: ignore[override]
         if "referencePath" not in content:
             content["referencePath"] = "client/accounts/account"
-
-        from .portfolio import Portfolio  # lazy to avoid circular import
 
         if "@reference" in content:
             return Account(content, content["@reference"])
@@ -97,8 +94,6 @@ class Account(PortfolioPerformanceObject):
             )
             if num > 1:
                 transact["referencePath"] += f"[{num}]"
-            from .portfolio import Portfolio  # lazy to avoid circular import
-            from .transaction import Transaction  # lazy to avoid circular import
 
             transaction_obj = Transaction.parse(transact)
             if "uuid" in transact:
@@ -125,8 +120,6 @@ class Account(PortfolioPerformanceObject):
         resolved transaction is appended to this account's list (and the
         account is set on the transaction).
         """
-        from .portfolio import Portfolio  # lazy to avoid circular import
-
         transactions_node = self.content.get("transactions")
         if transactions_node is None:
             return
@@ -147,17 +140,18 @@ class Account(PortfolioPerformanceObject):
             if not ref_path or not ref_path.startswith("../"):
                 continue
 
-            # Translate the relative reference into an absolute path
-            # rooted at the canonical account-transaction location.
-            parts = ref_path.split("/")
-            abs_parts = ["client", "accounts", "account", "transactions", "account-transaction"]
-            for part in parts:
-                if part == "..":
-                    if len(abs_parts) > 1:
-                        abs_parts.pop()
-                else:
-                    abs_parts.append(part)
-            abs_path = "/".join(abs_parts)
+            # Translate the relative reference into an absolute path.
+            # The base must be the reference_path of the current account-transaction
+            # node (not a hardcoded root), so that nested accounts (e.g. those
+            # stored inside cross_entry/account_to) resolve correctly.
+            # We use the same combine_paths() helper used everywhere else.
+            #
+            # The @reference on a transaction node is relative to that node itself,
+            # so the base is: <account.reference_path>/transactions/account-transaction
+            account_tx_base = (
+                self.content["referencePath"] + "/transactions/account-transaction"
+            )
+            abs_path = combine_paths(account_tx_base, ref_path)
 
             try:
                 resolved = Portfolio.currentPortfolio.get_object_by_path(  # type: ignore[attr-defined]
@@ -175,10 +169,10 @@ class Account(PortfolioPerformanceObject):
                 # will retry once depots are also parsed.
                 continue
 
-            if not hasattr(resolved, "setAccount"):
+            if not hasattr(resolved, "set_account"):
                 continue
 
-            resolved.setAccount(self)
+            resolved.set_account(self)
             if resolved not in self.transactions:
                 self.transactions.append(resolved)
 
@@ -193,3 +187,6 @@ class Account(PortfolioPerformanceObject):
         if self.name is not None:
             return f"Account/{self.name}: {self.get_balance()}"
         return f"Account/{self.reference}: {self.get_balance()}"
+
+from .portfolio import Portfolio  # noqa: E402
+from .transaction import Transaction  # noqa: E402

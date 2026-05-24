@@ -246,7 +246,7 @@ class Portfolio:
             return "value"
 
         def fn_aggregate(x: Any, y: Any) -> Any:
-            return x + y.getValue()
+            return x + y.get_value()
 
         self.evaluate_cluster(clusters, my_filter, fn_cluster, fn_aggregate)
 

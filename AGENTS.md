@@ -6,8 +6,8 @@ Root of the Python-based MCP server project. The `portfolio/` subdirectory is a 
 
 - `mcp_server.py` — FastMCP server exposing Portfolio Performance XML data as MCP tools
 - `pyfolio_performance/` — core library (Portfolio, Security, Transaction, Depot, Account classes)
-- `opencode.json` — MCP client configuration (used by opencode)
-- `requirements.txt` — `xmltodict==1.0.4` + `fastmcp>=3.2.0`
+- `opencode.json` — MCP client configuration
+- `requirements.txt` — `xmltodict` + `fastmcp` + `ruff` + `pyright`
 - `venv/` — Python 3.12 virtual environment
 - `tests/` — unit tests
 - `docs/` — Sphinx documentation
@@ -19,96 +19,20 @@ cd /home/steffen/pyfolio-performance-mcp
 ./venv/bin/python mcp_server.py
 ```
 
-The server auto-loads a portfolio from the `PORTFOLIO_FILE` env var or falls back to `kommer.xml`.
-
 ## MCP Tools
 
 ping, load_portfolio, reload_portfolio, get_portfolio_summary, get_accounts, get_account_by_name, get_depots, get_depot_by_name, get_securities, get_security_by_name, get_security_by_isin, get_security_by_wkn, get_security_price_history, get_transactions, get_transactions_by_type, get_transactions_by_year, get_transactions_for_security, get_performance_by_year
 
 All tools return `dict`. Patterns: `_require_portfolio()` guard, `_to_eur()` / `_price_to_eur()` helpers, snake_case naming, Google-style docstrings.
 
-## Adding a Tool
+## Tooling & Linting
 
-Define a function with `@mcp.tool`, type-annotated params, and a docstring. FastMCP auto-generates JSON Schema and handles validation. No manual schema wiring needed.
-
-## OpenCode Config
-
-`opencode.json` registers both the MCP server and the Python LSP:
-
-```json
-{
-  "mcp": {
-    "portfolio": {
-      "type": "local",
-      "command": ["./venv/bin/python", "mcp_server.py"],
-      "environment": { "PORTFOLIO_FILE": "kommer.xml" },
-      "enabled": true
-    }
-  },
-  "lsp": {
-    "python": {
-      "command": ["./venv/bin/pylsp"],
-      "extensions": [".py"],
-      "enabled": true
-    }
-  }
-}
-```
-
-The LSP provides type checking (via pylsp-mypy), go-to-definition, hover docstrings, and auto-completion directly in OpenCode's chat interface.
+- **Ruff**: Linting and formatting. Run `ruff check .`
+- **Pyright**: Static type checking. Run `pyright`
 
 ## Privacy Policy
 
-DO NOT EXPOSE ANY REAL PERSONAL DATA like balances, depots, ages, names, prompt files that may expose data
-
-## LSP / Code Quality
-
-Configured in `pyproject.toml` (ruff + mypy) and `.vscode/settings.json`.
-
-### What each tool does
-
-| Tool | Role | Catches |
-|------|------|---------|
-| **ruff** | Linter + formatter | Style violations, unused imports, `== None`, dead code, long lines |
-| **Pylance** | Type checker (in-editor) | Wrong types, missing returns, None-safety |
-| **mypy** | Type checker (CLI) | Same as Pylance but runnable in CI, stricter |
-| **pylsp** | OpenCode LSP | Wraps mypy for type checking + Jedi for IDE features |
-
-### VS Code workflow
-
-- **Red squiggles** = error from ruff or Pylance — hover to see why
-- **`Ctrl+S`** → auto-formats with ruff + organizes imports
-- **`Ctrl+Shift+M`** → Problems panel lists all diagnostics
-- **`Ctrl+.`** → Quick Fix (auto-fix the current issue)
-- **Inlay hints** (grey text) show return types and variable types — see settings in `.vscode/settings.json`
-
-### CLI workflow (before commit)
-
-```bash
-./venv/bin/ruff check .
-./venv/bin/ruff format --check .
-./venv/bin/mypy .
-```
-
-All three must pass clean. Use `ruff check --fix` to auto-fix what it can.
-
-### Common issues & fixes
-
-| Problem | Fix |
-|---------|-----|
-| `ruff` flags `X is None` style | Already fixed — never use `== None` |
-| `ruff` flags unused import | Remove it or use `# noqa: F401` if intentional |
-| `mypy` says `"X" has no attribute "Y"` | Typo in attribute name, or add `# type: ignore[attr-defined]` |
-| `mypy` says `Returning Any from function` | Add a proper return type annotation |
-| Circular import error | Use lazy import inside the function body, not at module top |
-
-### After adding a dependency
-
-If you `pip install` a new package, `mypy` may complain about missing stubs:
-```bash
-./venv/bin/pip install types-<package>
-# or add `ignore_missing_imports = true` in pyproject.toml
-```
+DO NOT EXPOSE ANY REAL PERSONAL DATA like balances, depots, ages, names, prompt files that may expose data.
 
 ## Commits
 

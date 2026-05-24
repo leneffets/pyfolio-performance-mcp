@@ -4,7 +4,6 @@ import re
 from collections.abc import Callable
 from typing import Any, ClassVar
 
-from .cross_entry import CrossEntry
 from .date_object import DateObject
 from .portfolio_performance_object import PortfolioPerformanceObject
 from .security import Security
@@ -62,8 +61,6 @@ class Transaction(PortfolioPerformanceObject):
     reference_map: ClassVar[dict[str, Transaction]] = {}
 
     def __init__(self, content: dict[str, Any], reference: str | None = None) -> None:
-        from .portfolio import Portfolio  # lazy to avoid circular import
-
         self.reference = reference
         self.security: Security | None = None
         self.content = content
@@ -263,3 +260,7 @@ class Transaction(PortfolioPerformanceObject):
             CrossEntry.parse(content["crossEntry"])
 
         return transaction
+
+from .portfolio import Portfolio  # noqa: E402
+
+from .cross_entry import CrossEntry  # noqa: E402
