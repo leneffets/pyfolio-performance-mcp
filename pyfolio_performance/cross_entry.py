@@ -52,25 +52,19 @@ class CrossEntry(PortfolioPerformanceObject):
         tx_to = next_entry.content.get("transactionTo")
 
         def _already_exists(tx: Any, account: Any) -> bool:
-            print(f"DEBUG: _already_exists called for {tx.type} on {account}")
             new_uuid = tx.content.get("uuid") if hasattr(tx, "content") else None
             if new_uuid:
-                print(f"DEBUG: account.transactions has {len(account.transactions)} items")
                 for existing in account.transactions:
                     if existing.content.get("uuid") == new_uuid:
                         return True
                 return False
 
-            print(f"DEBUG: account.transactions has {len(account.transactions)} items")
             for existing in account.transactions:
-                print(f"  Comparing with existing: {existing.type} {existing.get_date()} val={existing.get_value()} (type={type(existing.get_value())})")
-                print(f"  Against new:           {tx.type} {tx.get_date()} val={tx.get_value()} (type={type(tx.get_value())})")
                 if (
                     existing.get_date().get_order_value() == tx.get_date().get_order_value()
                     and existing.type == tx.type
                     and existing.get_value() == tx.get_value()
                 ):
-                    print("  MATCH FOUND!")
                     return True
             return False
 
@@ -88,9 +82,9 @@ class CrossEntry(PortfolioPerformanceObject):
 
     @staticmethod
     def parse(content: Any) -> CrossEntry | None:  # type: ignore[override]
-        from .account import Account
-        from .depot import Depot
-        from .transaction import Transaction
+        from .account import Account  # noqa: PLC0415
+        from .depot import Depot  # noqa: PLC0415
+        from .transaction import Transaction  # noqa: PLC0415
 
         if "@reference" in content:
             return None

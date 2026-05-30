@@ -1,3 +1,5 @@
+# pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
+
 from typing import Any
 
 import xmltodict
@@ -135,11 +137,11 @@ class Portfolio:
         for dep in self.depotList:
             dep.resolve_reference()
 
-    def register_uuid(self, uuid: str, obj: Any) -> None:
+    def register_uuid(self, uuid: str | None, obj: Any) -> None:
         if uuid is not None:
             self.uuid_map[uuid] = obj
 
-    def register_path(self, path: str, obj: Any) -> None:
+    def register_path(self, path: str | None, obj: Any) -> None:
         if path is not None:
             self.path_map[path] = obj
 
@@ -212,19 +214,13 @@ class Portfolio:
         :type: list(Transaction)
         """
         total_transactions = []
-        if (
-            transaction_type == Portfolio.TRANSACTION_DEPOT
-            or transaction_type == Portfolio.TRANSACTION_ALL
-        ):
+        if transaction_type in (Portfolio.TRANSACTION_DEPOT, Portfolio.TRANSACTION_ALL):
             for depot in self.get_depots():
                 for t in depot.get_transactions():
                     if transaction_type == Portfolio.TRANSACTION_ALL and t.type in ("BUY", "SELL"):
                         continue
                     total_transactions.append(t)
-        if (
-            transaction_type == Portfolio.TRANSACTION_ACCOUNT
-            or transaction_type == Portfolio.TRANSACTION_ALL
-        ):
+        if transaction_type in (Portfolio.TRANSACTION_ACCOUNT, Portfolio.TRANSACTION_ALL):
             for acc in self.get_accounts():
                 total_transactions.extend(acc.get_transactions())
         return total_transactions

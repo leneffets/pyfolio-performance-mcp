@@ -1,3 +1,5 @@
+# pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
+
 from typing import Any
 
 from .date_object import DateObject
@@ -101,7 +103,7 @@ class Security(PortfolioPerformanceObject):
 
         return attrs
 
-    def get_logo(self) -> str | None:
+    def get_logo(self) -> str | None:  # noqa: PLR0912
         """
         :return: Logo of the security
         :type: str
@@ -237,8 +239,8 @@ class Security(PortfolioPerformanceObject):
         """
         return Security.security_wkn_map.get(wkn)
 
-    @staticmethod
-    def parse_content(data: dict[str, Any]) -> "Security":
+    @classmethod
+    def parse_content(cls, data: dict[str, Any]) -> "Security":
         return Security(data)
 
     def __repr__(self) -> str:

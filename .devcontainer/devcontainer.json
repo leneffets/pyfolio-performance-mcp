@@ -4,16 +4,22 @@
   "features": {
     "ghcr.io/devcontainer-community/devcontainer-features/opencode.ai:1": {}
   },
+  "remoteUser": "vscode",
+  "initializeCommand": "mkdir -p ${localEnv:HOME}/.local/share/opencode ${localEnv:HOME}/.local/state/opencode ${localEnv:HOME}/.config/opencode",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "forwardPorts": [
     8000
   ],
   "mounts": [
-    // "source=${localWorkspaceFolder}/.opencode-sessions,target=/home/vscode/.opencode-sessions,type=bind,consistency=cached",
-    // "source=${env:HOME}/.config/opencode,target=/home/vscode/.config/opencode,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.local/share/opencode,target=/home/vscode/.local/share/opencode,type=bind",
+    "source=${localEnv:HOME}/.local/state/opencode,target=/home/vscode/.local/state/opencode,type=bind",
+    "source=${localEnv:HOME}/.config/opencode,target=/home/vscode/.config/opencode,type=bind"
   ],
   "customizations": {
     "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv-devcontainer/bin/python"
+      },
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",

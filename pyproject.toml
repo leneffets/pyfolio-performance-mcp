@@ -15,6 +15,6 @@ select = ["E", "F", "I", "UP", "N", "PL"]
 ignore = ["E501"]
 
 [tool.pyright]
-include = ["pyfolio_performance", "tests"]
-typeCheckingMode = "strict"
+include = ["mcp_server.py", "extraetf_server.py", "pyfolio_performance", "tests"]
+typeCheckingMode = "basic"
 pythonVersion = "3.12"

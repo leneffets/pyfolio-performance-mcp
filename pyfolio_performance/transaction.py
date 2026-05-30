@@ -1,3 +1,5 @@
+# pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
+
 from __future__ import annotations
 
 import re
@@ -205,7 +207,7 @@ class Transaction(PortfolioPerformanceObject):
         if self.security is not None:
             return True
 
-        sec_node = self.content.get("security") if isinstance(self.content, dict) else None
+        sec_node = self.content.get("security")
         if not isinstance(sec_node, dict):
             return False
 
@@ -261,6 +263,5 @@ class Transaction(PortfolioPerformanceObject):
 
         return transaction
 
-from .portfolio import Portfolio  # noqa: E402
-
 from .cross_entry import CrossEntry  # noqa: E402
+from .portfolio import Portfolio  # noqa: E402

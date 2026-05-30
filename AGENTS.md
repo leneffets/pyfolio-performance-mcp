@@ -8,7 +8,8 @@ Root of the Python-based MCP server project. The `portfolio/` subdirectory is a 
 - `pyfolio_performance/` — core library (Portfolio, Security, Transaction, Depot, Account classes)
 - `opencode.json` — MCP client configuration
 - `requirements.txt` — `xmltodict` + `fastmcp` + `ruff` + `pyright`
-- `venv/` — Python 3.12 virtual environment
+- `.venv/` — native Python 3.12 virtual environment
+- `.venv-devcontainer/` — devcontainer Python 3.12 virtual environment
 - `tests/` — unit tests
 - `docs/` — Sphinx documentation
 
@@ -16,7 +17,7 @@ Root of the Python-based MCP server project. The `portfolio/` subdirectory is a 
 
 ```bash
 cd /home/steffen/pyfolio-performance-mcp
-./venv/bin/python mcp_server.py
+python mcp_server.py
 ```
 
 ## MCP Tools
@@ -32,7 +33,8 @@ All tools return `dict`. Patterns: `_require_portfolio()` guard, `_to_eur()` / `
 
 ## Privacy Policy
 
-DO NOT EXPOSE ANY REAL PERSONAL DATA like balances, depots, ages, names, prompt files that may expose data.
+Do not commit real personal data (balances, depots, names, etc.) to git.
+Runtime exposure via MCP tools is fine.
 
 ## Commits
 

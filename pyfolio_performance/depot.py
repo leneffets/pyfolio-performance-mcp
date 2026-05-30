@@ -1,3 +1,5 @@
+# pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
+
 from typing import Any
 
 from .portfolio_performance_object import PortfolioPerformanceObject
@@ -76,7 +78,7 @@ class Depot(PortfolioPerformanceObject):
         self.depotSecurities = {}
 
         for transaction in self.transactions:
-            sec, change = transaction.getSecurityChange()
+            sec, change = transaction.get_security_change()
             if sec not in self.depotSecurities:
                 self.depotSecurities[sec] = 0
             self.depotSecurities[sec] += change

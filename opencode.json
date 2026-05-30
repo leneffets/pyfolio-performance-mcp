@@ -5,7 +5,7 @@
     "portfolio": {
       "type": "local",
       "command": [
-        "./venv/bin/python",
+        "python",
         "mcp_server.py"
       ],
       "environment": {
@@ -16,7 +16,7 @@
     "extraetf": {
       "type": "local",
       "command": [
-        "./venv/bin/python",
+        "python",
         "extraetf_server.py"
       ],
       "enabled": true

@@ -1,3 +1,5 @@
+# ruff: noqa: I001 — import order must respect circular dependency chain
+
 from .helpers import MyCustomClassEncoder, combine_paths, copy_from
 from .date_object import DateObject
 from .portfolio_performance_object import PortfolioPerformanceObject
@@ -30,4 +32,4 @@ def reset() -> None:
     invokes this automatically. Kept for backwards compatibility and for
     callers that want to clear state without loading a new portfolio.
     """
-    Portfolio._reset_class_state()
+    Portfolio._reset_class_state()  # type: ignore[reportPrivateUsage]

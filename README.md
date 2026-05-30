@@ -19,11 +19,11 @@ pip install pyfolio-performance
 
 ```bash
 # Create virtual environment
-python3 -m venv venv
+python3 -m venv .venv
 
 # Activate
-source venv/bin/activate  # Linux/Mac
-# or: venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/Mac
+# or: .venv\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
@@ -67,12 +67,13 @@ for depot in port_perf.get_depots():
 
 This project includes an MCP (Model Context Protocol) server that exposes your Portfolio Performance data to AI agents for investment analysis and advice.
 
-### Quick Setup (with venv)
+### Quick Setup (native with pyenv/venv)
 
 ```bash
-# 1. Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
+# 1. Use Python 3.12 via pyenv, then create and activate virtual environment
+pyenv install 3.12  # if needed
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/Mac
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -80,6 +81,9 @@ pip install -r requirements.txt
 # 3. Test the server
 python mcp_server.py
 ```
+
+The devcontainer uses `.venv-devcontainer` instead. Activate the matching venv
+before starting `opencode`, because MCP commands use plain `python`.
 
 ### Configuration
 
@@ -118,7 +122,7 @@ Add this to your project `opencode.json`:
   "mcp": {
     "portfolio": {
       "type": "local",
-      "command": ["./venv/bin/python", "mcp_server.py"],
+      "command": ["python", "mcp_server.py"],
       "environment": {
         "PORTFOLIO_FILE": "kommer.xml"
       },
@@ -128,7 +132,8 @@ Add this to your project `opencode.json`:
 }
 ```
 
-Then run opencode from the project directory. The portfolio auto-loads on startup.
+Then activate the native `.venv` or container `.venv-devcontainer` and run
+opencode from the project directory. The portfolio auto-loads on startup.
 
 ## Sample Prompt
 

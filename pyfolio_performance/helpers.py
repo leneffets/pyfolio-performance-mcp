@@ -28,15 +28,15 @@ def copy_from(self: Any, other: Any) -> None:
 
 
 class MyCustomClassEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> Any:
-        from .account import Account
-        from .depot import Depot
-        from .transaction import Transaction
+    def default(self, o: Any) -> Any:
+        from .account import Account  # noqa: PLC0415
+        from .depot import Depot  # noqa: PLC0415
+        from .transaction import Transaction  # noqa: PLC0415
 
-        if isinstance(obj, Transaction):
-            return obj.to_dict()
-        elif isinstance(obj, Account):
-            return str(obj)
-        elif isinstance(obj, Depot):
-            return obj.content
-        return super().default(obj)
+        if isinstance(o, Transaction):
+            return o.to_dict()
+        elif isinstance(o, Account):
+            return str(o)
+        elif isinstance(o, Depot):
+            return o.content
+        return super().default(o)

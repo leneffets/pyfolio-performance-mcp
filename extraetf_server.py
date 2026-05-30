@@ -22,6 +22,7 @@ How it works:
 import json
 import ssl
 import time
+import urllib.error
 import urllib.request
 
 from fastmcp import FastMCP

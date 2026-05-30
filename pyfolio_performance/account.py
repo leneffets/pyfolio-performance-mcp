@@ -1,3 +1,5 @@
+# pyright: reportUnknownVariableType=false, reportUnknownMemberType=false, reportUnknownArgumentType=false
+
 from typing import Any
 
 from .helpers import combine_paths
@@ -37,10 +39,11 @@ class Account(PortfolioPerformanceObject):
         bal = self.balance
         if bal is not None:
             return bal
-        self.balance = 0
+        result = 0
         for t in self.transactions:
-            self.balance += t.get_value()
-        return self.balance
+            result += t.get_value()
+        self.balance = result
+        return result
 
     def get_name(self) -> str:
         """

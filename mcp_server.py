@@ -38,14 +38,13 @@ def _xml_price_to_eur(raw_price: int) -> float:
 
 
 def _require_portfolio() -> Portfolio:
-    global portfolio
     if portfolio is None:
         raise RuntimeError("No portfolio loaded")
     return portfolio
 
 
 def _load_portfolio_impl(file_path: str) -> None:
-    global portfolio
+    global portfolio  # noqa: PLW0603
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
