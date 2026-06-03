@@ -20,6 +20,16 @@
         "extraetf_server.py"
       ],
       "enabled": true
+    },
+    "yfmcp": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "narumi/yfinance-mcp"
+      ],
+      "enabled": true
     }
   }
 }
