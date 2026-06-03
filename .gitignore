@@ -1,5 +1,6 @@
 # Personal portfolio data files
 *.xml
+!tests/fixtures/original_project/*.xml
 
 # OpenCode internal config
 .opencode/

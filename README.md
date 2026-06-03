@@ -28,7 +28,7 @@ source .venv/bin/activate  # Linux/Mac
 # Install dependencies
 pip install -r requirements.txt
 
-# Test
+# Smoke-test a local Portfolio Performance XML file
 python -c "
 from pyfolio_performance import Portfolio, reset
 
@@ -44,6 +44,13 @@ print(f'Pay-in: {total_in/100:.2f} EUR')
 print(f'Depot: {depot_value/100:.2f} EUR')
 print(f'P/L: {(depot_value-total_in)/100:.2f} EUR')
 "
+```
+
+Run the regression tests:
+
+```bash
+python -m pytest
+ruff check .
 ```
 
 ## Quick Start
@@ -156,9 +163,23 @@ You are a portfolio analyst. Analyze this portfolio across:
 Use the MCP tools to fetch data, then provide actionable insights.
 ```
 
-## Test Files
+## Tests
 
-- **Official test file:** https://github.com/portfolio-performance/portfolio/blob/master/name.abuchen.portfolio.ui/src/name/abuchen/portfolio/ui/parts/kommer.xml
+The test suite includes small XML fixtures copied from the upstream Portfolio
+Performance project under `tests/fixtures/original_project/`. They cover account
+balances, depot holdings, tax/fee transactions, delivery transactions,
+portfolio transfers, single-node XML parsing, and class-level cache resets.
+
+Run:
+
+```bash
+python -m pytest
+ruff check .
+```
+
+`*.xml` files are ignored by default to avoid committing personal portfolio data.
+Only the public fixture XML files under `tests/fixtures/original_project/` are
+explicitly unignored.
 
 ## Docs
 
