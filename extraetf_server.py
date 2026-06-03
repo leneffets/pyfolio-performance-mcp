@@ -20,8 +20,9 @@ How it works:
 """
 
 import json
-import time
 import ssl
+import time
+import urllib.error
 import urllib.request
 
 from fastmcp import FastMCP

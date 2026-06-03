@@ -6,9 +6,10 @@ Root of the Python-based MCP server project. The `portfolio/` subdirectory is a 
 
 - `mcp_server.py` — FastMCP server exposing Portfolio Performance XML data as MCP tools
 - `pyfolio_performance/` — core library (Portfolio, Security, Transaction, Depot, Account classes)
-- `opencode.json` — MCP client configuration (used by opencode)
-- `requirements.txt` — `xmltodict==1.0.4` + `fastmcp>=3.2.0`
-- `venv/` — Python 3.12 virtual environment
+- `opencode.json` — MCP client configuration
+- `requirements.txt` — `xmltodict` + `fastmcp` + `ruff` + `pyright`
+- `.venv/` — native Python 3.12 virtual environment
+- `.venv-devcontainer/` — devcontainer Python 3.12 virtual environment
 - `tests/` — unit tests
 - `docs/` — Sphinx documentation
 
@@ -16,10 +17,8 @@ Root of the Python-based MCP server project. The `portfolio/` subdirectory is a 
 
 ```bash
 cd /home/steffen/pyfolio-performance-mcp
-./venv/bin/python mcp_server.py
+python mcp_server.py
 ```
-
-The server auto-loads a portfolio from the `PORTFOLIO_FILE` env var or falls back to `kommer.xml`.
 
 ## MCP Tools
 
@@ -27,29 +26,15 @@ ping, load_portfolio, reload_portfolio, get_portfolio_summary, get_accounts, get
 
 All tools return `dict`. Patterns: `_require_portfolio()` guard, `_to_eur()` / `_price_to_eur()` helpers, snake_case naming, Google-style docstrings.
 
-## Adding a Tool
+## Tooling & Linting
 
-Define a function with `@mcp.tool`, type-annotated params, and a docstring. FastMCP auto-generates JSON Schema and handles validation. No manual schema wiring needed.
-
-## OpenCode Config
-
-`opencode.json` registers the server:
-```json
-{
-  "mcp": {
-    "portfolio": {
-      "type": "local",
-      "command": ["./venv/bin/python", "mcp_server.py"],
-      "environment": { "PORTFOLIO_FILE": "kommer.xml" },
-      "enabled": true
-    }
-  }
-}
-```
+- **Ruff**: Linting and formatting. Run `ruff check .`
+- **Pyright**: Static type checking. Run `pyright`
 
 ## Privacy Policy
 
-DO NOT EXPOSE ANY REAL PERSONAL DATA like balances, depots, ages, names, prompt files that may expose data
+Do not commit real personal data (balances, depots, names, etc.) to git.
+Runtime exposure via MCP tools is fine.
 
 ## Commits
 

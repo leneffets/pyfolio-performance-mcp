@@ -7,13 +7,13 @@ Exposes Portfolio Performance XML data through MCP tools for AI agents.
 
 import os
 from pathlib import Path
+from typing import Any
 
 from fastmcp import FastMCP
 
 from pyfolio_performance import Portfolio, reset
-from pyfolio_performance.classSecurity import Security
-from pyfolio_performance.classTransaction import Transaction
-from pyfolio_performance.classDepot import Depot
+from pyfolio_performance.security import Security
+from pyfolio_performance.transaction import Transaction
 
 mcp = FastMCP("Portfolio Performance")
 
@@ -24,7 +24,8 @@ portfolio: Portfolio | None = None
 # Helpers
 # =============================================================================
 
-def _to_eur(cents: int) -> float:
+
+def _to_eur(cents: int | float) -> float:
     return round(cents / 100, 2)
 
 
@@ -37,14 +38,13 @@ def _xml_price_to_eur(raw_price: int) -> float:
 
 
 def _require_portfolio() -> Portfolio:
-    global portfolio
     if portfolio is None:
         raise RuntimeError("No portfolio loaded")
     return portfolio
 
 
 def _load_portfolio_impl(file_path: str) -> None:
-    global portfolio
+    global portfolio  # noqa: PLW0603
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
@@ -59,29 +59,30 @@ except Exception as e:
     _auto_load_error = str(e)
 
 
-def _format_transaction(t: Transaction) -> dict:
+def _format_transaction(t: Transaction) -> dict[str, Any]:
     depot = t.content.get("depot")
     account = t.content.get("account")
+    security = t.get_security()
     return {
-        "date": str(t.getDate()),
+        "date": str(t.get_date()),
         "type": t.type,
-        "value_eur": _to_eur(t.getValue()),
-        "shares": round(t.getShares() / 100000000, 4) if t.getShares() else 0,
-        "security": t.getSecurity().getName() if t.getSecurity() else None,
-        "depot": depot.getName() if depot else None,
-        "account": account.name if account else None
+        "value_eur": _to_eur(t.get_value()),
+        "shares": round(t.get_shares() / 100000000, 4) if t.get_shares() else 0,
+        "security": security.get_name() if security else None,
+        "depot": depot.get_name() if depot else None,
+        "account": account.name if account else None,
     }
 
 
-def _get_sec_info(sec: Security, shares: float) -> dict:
-    price = _price_to_eur(sec.getMostRecentValue())
-    info = {
-        "name": sec.getName(),
+def _get_sec_info(sec: Security, shares: float) -> dict[str, Any]:
+    price = _price_to_eur(sec.get_most_recent_value())
+    info: dict[str, Any] = {
+        "name": sec.get_name(),
         "isin": sec.isin,
         "wkn": sec.wkn,
         "shares": round(shares, 4),
         "current_price_eur": price,
-        "total_value_eur": round(price * shares, 2)
+        "total_value_eur": round(price * shares, 2),
     }
     if sec.ticker_symbol:
         info["ticker_symbol"] = sec.ticker_symbol
@@ -94,7 +95,7 @@ def _get_sec_info(sec: Security, shares: float) -> dict:
 
 
 def _get_security(name: str) -> Security:
-    sec = Security.getSecurityByName(name)
+    sec = Security.get_security_by_name(name)
     if sec is None:
         raise ValueError(f"Security not found: {name}")
     return sec
@@ -104,8 +105,9 @@ def _get_security(name: str) -> Security:
 # MCP Tools
 # =============================================================================
 
+
 @mcp.tool
-def ping() -> dict:
+def ping() -> dict[str, Any]:
     """Health check — verify the MCP server is running and responsive.
 
     Returns:
@@ -116,7 +118,7 @@ def ping() -> dict:
 
 
 @mcp.tool
-def load_portfolio(file_path: str | None = None) -> dict:
+def load_portfolio(file_path: str | None = None) -> dict[str, Any]:
     """Load a Portfolio Performance export file.
 
     Clears any previously loaded portfolio and loads a new one.
@@ -136,7 +138,7 @@ def load_portfolio(file_path: str | None = None) -> dict:
 
 
 @mcp.tool
-def reload_portfolio() -> dict:
+def reload_portfolio() -> dict[str, Any]:
     """Reload the current portfolio from disk without restarting the server.
 
     Useful after the source file has been updated externally.
@@ -152,7 +154,7 @@ def reload_portfolio() -> dict:
 
 
 @mcp.tool
-def get_portfolio_summary() -> dict:
+def get_portfolio_summary() -> dict[str, Any]:
     """Quick financial overview — total assets, cash, depot value, and P/L.
 
     Notes on interpretation:
@@ -184,42 +186,43 @@ def get_portfolio_summary() -> dict:
     """
     portfolio = _require_portfolio()
 
-    total_cash_eur = _to_eur(sum(a.getBalance() for a in portfolio.getAccounts()))
+    total_cash_eur = _to_eur(sum(a.get_balance() for a in portfolio.get_accounts()))
 
-    holding_types = ('BUY', 'SELL')
+    holding_types = ("BUY", "SELL")
 
     depot_value = 0
     depot_details = []
-    for d in portfolio.getDepots():
+    for d in portfolio.get_depots():
         dv = 0
         securities_count = 0
         securities_dict = {}
-        for sec, shares in d.getSecurities().items():
+        for sec, shares in d.get_securities().items():
             info = _get_sec_info(sec, shares)
             dv += info["total_value_eur"]
             securities_count += 1
-            securities_dict[sec.getName()] = info
+            securities_dict[sec.get_name()] = info
         dv = round(dv, 2)
         depot_value += dv
 
-        net = sum(t.getValue() for t in d.getTransactions()
-                  if t.type in holding_types)
+        net = sum(t.get_value() for t in d.get_transactions() if t.type in holding_types)
         invested_eur = _to_eur(-net)
 
-        depot_details.append({
-            "name": d.getName(),
-            "value_eur": dv,
-            "invested_eur": invested_eur,
-            "profit_eur": round(dv - invested_eur, 2),
-            "securities_count": securities_count,
-            "securities": securities_dict
-        })
+        depot_details.append(
+            {
+                "name": d.get_name(),
+                "value_eur": dv,
+                "invested_eur": invested_eur,
+                "profit_eur": round(dv - invested_eur, 2),
+                "securities_count": securities_count,
+                "securities": securities_dict,
+            }
+        )
     depot_value_eur = round(depot_value, 2)
 
     net_payin = 0
-    for t in portfolio.getTotalTransactions(Portfolio.TRANSACTION_ALL):
-        if t.type in ('DEPOSIT', 'TRANSFER_IN', 'REMOVAL', 'TRANSFER_OUT'):
-            net_payin += t.getValue()
+    for t in portfolio.get_total_transactions(Portfolio.TRANSACTION_ALL):
+        if t.type in ("DEPOSIT", "TRANSFER_IN", "REMOVAL", "TRANSFER_OUT"):
+            net_payin += t.get_value()
     net_payin_eur = _to_eur(net_payin)
 
     total_assets_eur = round(total_cash_eur + depot_value_eur, 2)
@@ -230,17 +233,19 @@ def get_portfolio_summary() -> dict:
         "total_assets_eur": total_assets_eur,
         "total_payin_eur": net_payin_eur,
         "profit_loss_eur": round(total_assets_eur - net_payin_eur, 2),
-        "account_count": len(portfolio.getAccounts()),
-        "depot_count": len(portfolio.getDepots()),
-        "security_count": len(portfolio.getSecurities()),
-        "accounts": [{"name": a.getName(), "balance_eur": _to_eur(a.getBalance())}
-                     for a in portfolio.getAccounts()],
-        "depots": depot_details
+        "account_count": len(portfolio.get_accounts()),
+        "depot_count": len(portfolio.get_depots()),
+        "security_count": len(portfolio.get_securities()),
+        "accounts": [
+            {"name": a.get_name(), "balance_eur": _to_eur(a.get_balance())}
+            for a in portfolio.get_accounts()
+        ],
+        "depots": depot_details,
     }
 
 
 @mcp.tool
-def get_accounts() -> dict:
+def get_accounts() -> dict[str, Any]:
     """List all accounts with their current cash balances.
 
     Accounts represent cash holdings (e.g. checking account, deposit account).
@@ -252,13 +257,15 @@ def get_accounts() -> dict:
         accounts: list of {name, balance_eur}
     """
     portfolio = _require_portfolio()
-    accounts = [{"name": a.getName(), "balance_eur": _to_eur(a.getBalance())}
-                for a in portfolio.getAccounts()]
+    accounts = [
+        {"name": a.get_name(), "balance_eur": _to_eur(a.get_balance())}
+        for a in portfolio.get_accounts()
+    ]
     return {"accounts": accounts}
 
 
 @mcp.tool
-def get_depots() -> dict:
+def get_depots() -> dict[str, Any]:
     """List all depots with their security holdings.
 
     Depots represent brokerage accounts holding securities.
@@ -271,16 +278,23 @@ def get_depots() -> dict:
     """
     portfolio = _require_portfolio()
     depots = []
-    for depot in portfolio.getDepots():
-        securities = {sec.getName(): _get_sec_info(sec, shares)
-                      for sec, shares in depot.getSecurities().items()}
-        depots.append({"name": depot.getName(), "securities": securities,
-                       "transaction_count": len(depot.getTransactions())})
+    for depot in portfolio.get_depots():
+        securities = {
+            sec.get_name(): _get_sec_info(sec, shares)
+            for sec, shares in depot.get_securities().items()
+        }
+        depots.append(
+            {
+                "name": depot.get_name(),
+                "securities": securities,
+                "transaction_count": len(depot.get_transactions()),
+            }
+        )
     return {"depots": depots}
 
 
 @mcp.tool
-def get_securities() -> dict:
+def get_securities() -> dict[str, Any]:
     """List all securities tracked in the portfolio.
 
     Includes securities the user has fully sold (shares == 0) and
@@ -296,13 +310,14 @@ def get_securities() -> dict:
                     custom_attributes?}
     """
     portfolio = _require_portfolio()
-    securities = [_get_sec_info(sec, portfolio.getShares(sec))
-                  for sec in portfolio.getSecurities()]
+    securities = [
+        _get_sec_info(sec, portfolio.get_shares(sec)) for sec in portfolio.get_securities()
+    ]
     return {"securities": securities}
 
 
 @mcp.tool
-def get_transactions() -> dict:
+def get_transactions() -> dict[str, Any]:
     """Return every transaction in the portfolio (buy, sell, dividend, deposit, etc.).
 
     Each transaction includes date, type, value in EUR, shares traded,
@@ -313,13 +328,14 @@ def get_transactions() -> dict:
         count: total number of transactions
     """
     portfolio = _require_portfolio()
-    transactions = [_format_transaction(t)
-                   for t in portfolio.getTotalTransactions(Portfolio.TRANSACTION_ALL)]
+    transactions = [
+        _format_transaction(t) for t in portfolio.get_total_transactions(Portfolio.TRANSACTION_ALL)
+    ]
     return {"transactions": transactions, "count": len(transactions)}
 
 
 @mcp.tool
-def get_account_by_name(name: str) -> dict:
+def get_account_by_name(name: str) -> dict[str, Any]:
     """Look up a single account by its name (case-insensitive).
 
     Args:
@@ -329,15 +345,14 @@ def get_account_by_name(name: str) -> dict:
         account: {name, balance_eur}
     """
     portfolio = _require_portfolio()
-    for acc in portfolio.getAccounts():
-        if acc.getName().lower() == name.lower():
-            return {"account": {"name": acc.getName(),
-                                "balance_eur": _to_eur(acc.getBalance())}}
+    for acc in portfolio.get_accounts():
+        if acc.get_name().lower() == name.lower():
+            return {"account": {"name": acc.get_name(), "balance_eur": _to_eur(acc.get_balance())}}
     raise ValueError(f"Account not found: {name}")
 
 
 @mcp.tool
-def get_depot_by_name(name: str) -> dict:
+def get_depot_by_name(name: str) -> dict[str, Any]:
     """Look up a single depot by its name (case-insensitive).
 
     Args:
@@ -349,16 +364,18 @@ def get_depot_by_name(name: str) -> dict:
                 currency_code?, custom_attributes?}}}
     """
     portfolio = _require_portfolio()
-    for depot in portfolio.getDepots():
-        if depot.getName().lower() == name.lower():
-            securities = {sec.getName(): _get_sec_info(sec, shares)
-                         for sec, shares in depot.getSecurities().items()}
-            return {"depot": {"name": depot.getName(), "securities": securities}}
+    for depot in portfolio.get_depots():
+        if depot.get_name().lower() == name.lower():
+            securities = {
+                sec.get_name(): _get_sec_info(sec, shares)
+                for sec, shares in depot.get_securities().items()
+            }
+            return {"depot": {"name": depot.get_name(), "securities": securities}}
     raise ValueError(f"Depot not found: {name}")
 
 
 @mcp.tool
-def get_security_by_name(name: str) -> dict:
+def get_security_by_name(name: str) -> dict[str, Any]:
     """Look up a security by its name.
 
     Args:
@@ -368,13 +385,13 @@ def get_security_by_name(name: str) -> dict:
         security: {name, isin, wkn, shares, current_price_eur, total_value_eur,
                    ticker_symbol?, currency_code?, custom_attributes?}
     """
-    _require_portfolio()
+    portfolio = _require_portfolio()
     sec = _get_security(name)
-    return {"security": _get_sec_info(sec, portfolio.getShares(sec))}
+    return {"security": _get_sec_info(sec, portfolio.get_shares(sec))}
 
 
 @mcp.tool
-def get_security_by_isin(isin: str) -> dict:
+def get_security_by_isin(isin: str) -> dict[str, Any]:
     """Look up a security by its ISIN (International Securities Identification Number).
 
     Args:
@@ -384,15 +401,15 @@ def get_security_by_isin(isin: str) -> dict:
         security: {name, isin, wkn, shares, current_price_eur, total_value_eur,
                    ticker_symbol?, currency_code?, custom_attributes?}
     """
-    _require_portfolio()
-    sec = Security.getSecurityByIsin(isin)
+    portfolio = _require_portfolio()
+    sec = Security.get_security_by_isin(isin)
     if sec is None:
         raise ValueError(f"Security not found: {isin}")
-    return {"security": _get_sec_info(sec, portfolio.getShares(sec))}
+    return {"security": _get_sec_info(sec, portfolio.get_shares(sec))}
 
 
 @mcp.tool
-def get_security_by_wkn(wkn: str) -> dict:
+def get_security_by_wkn(wkn: str) -> dict[str, Any]:
     """Look up a security by its WKN (German securities identifier).
 
     Args:
@@ -402,15 +419,15 @@ def get_security_by_wkn(wkn: str) -> dict:
         security: {name, isin, wkn, shares, current_price_eur, total_value_eur,
                    ticker_symbol?, currency_code?, custom_attributes?}
     """
-    _require_portfolio()
-    sec = Security.getSecurityByWkn(wkn)
+    portfolio = _require_portfolio()
+    sec = Security.get_security_by_wkn(wkn)
     if sec is None:
         raise ValueError(f"Security not found: {wkn}")
-    return {"security": _get_sec_info(sec, portfolio.getShares(sec))}
+    return {"security": _get_sec_info(sec, portfolio.get_shares(sec))}
 
 
 @mcp.tool
-def get_security_price_history(name: str, limit: int = 100) -> dict:
+def get_security_price_history(name: str, limit: int = 100) -> dict[str, Any]:
     """Retrieve historical daily closing prices for a security.
 
     Prices are returned sorted newest-first.
@@ -439,16 +456,23 @@ def get_security_price_history(name: str, limit: int = 100) -> dict:
     if isinstance(price_list, dict):
         price_list = [price_list]
 
-    history = [{"date": p["@t"], "price_eur": _xml_price_to_eur(int(p["@v"]))}
-               for p in price_list if isinstance(p, dict)]
+    history = [
+        {"date": p["@t"], "price_eur": _xml_price_to_eur(int(p["@v"]))}
+        for p in price_list
+        if isinstance(p, dict)
+    ]
     history.sort(key=lambda x: x["date"], reverse=True)
 
-    return {"security": name, "prices": history[:limit],
-            "count": len(history[:limit]), "total_available": len(history)}
+    return {
+        "security": name,
+        "prices": history[:limit],
+        "count": len(history[:limit]),
+        "total_available": len(history),
+    }
 
 
 @mcp.tool
-def get_transactions_by_type(transaction_type: str) -> dict:
+def get_transactions_by_type(transaction_type: str) -> dict[str, Any]:
     """Filter transactions by type.
 
     Common types: BUY, SELL, DIVIDENDS, DEPOSIT, REMOVAL, TRANSFER_IN,
@@ -464,15 +488,20 @@ def get_transactions_by_type(transaction_type: str) -> dict:
         type: normalized uppercase type
     """
     portfolio = _require_portfolio()
-    transactions = [_format_transaction(t) for t in
-                   portfolio.getTotalTransactions(Portfolio.TRANSACTION_ALL)
-                   if t.type == transaction_type.upper()]
-    return {"transactions": transactions, "count": len(transactions),
-            "type": transaction_type.upper()}
+    transactions = [
+        _format_transaction(t)
+        for t in portfolio.get_total_transactions(Portfolio.TRANSACTION_ALL)
+        if t.type == transaction_type.upper()
+    ]
+    return {
+        "transactions": transactions,
+        "count": len(transactions),
+        "type": transaction_type.upper(),
+    }
 
 
 @mcp.tool
-def get_transactions_by_year(year: int) -> dict:
+def get_transactions_by_year(year: int) -> dict[str, Any]:
     """Filter transactions by calendar year.
 
     Args:
@@ -484,14 +513,18 @@ def get_transactions_by_year(year: int) -> dict:
         year: the year requested
     """
     portfolio = _require_portfolio()
-    transactions = [_format_transaction(t) for t in
-                   portfolio.getTotalTransactions(Portfolio.TRANSACTION_ALL)
-                   if t.getYear() == year]
+    transactions = [
+        _format_transaction(t)
+        for t in portfolio.get_total_transactions(Portfolio.TRANSACTION_ALL)
+        if t.get_year() == year
+    ]
     return {"transactions": transactions, "count": len(transactions), "year": year}
 
 
 @mcp.tool
-def get_transactions_for_security(security_name: str, depot: str | None = None, type: str | None = None) -> dict:
+def get_transactions_for_security(
+    security_name: str, depot: str | None = None, type: str | None = None
+) -> dict[str, Any]:
     """Get transactions involving a specific security, optionally filtered by depot and/or type.
 
     Args:
@@ -516,24 +549,20 @@ def get_transactions_for_security(security_name: str, depot: str | None = None, 
     sec = _get_security(security_name)
 
     filtered = []
-    for t in portfolio.getTotalTransactions(Portfolio.TRANSACTION_ALL):
-        if t.getSecurity() != sec:
+    for t in portfolio.get_total_transactions(Portfolio.TRANSACTION_ALL):
+        if t.get_security() != sec:
             continue
         if type and t.type != type.upper():
             continue
         if depot:
             d = t.content.get("depot")
             a = t.content.get("account")
-            name = d.getName() if d else (a.name if a else None)
+            name = d.get_name() if d else (a.name if a else None)
             if not name or name.lower() != depot.lower():
                 continue
         filtered.append(_format_transaction(t))
 
-    result = {
-        "transactions": filtered,
-        "count": len(filtered),
-        "security": security_name
-    }
+    result = {"transactions": filtered, "count": len(filtered), "security": security_name}
     if depot:
         result["depot"] = depot
     if type:
@@ -542,7 +571,7 @@ def get_transactions_for_security(security_name: str, depot: str | None = None, 
 
 
 @mcp.tool
-def get_performance_by_year() -> dict:
+def get_performance_by_year() -> dict[str, Any]:
     """Yearly aggregation of all transactions grouped by type.
 
     Useful for seeing how much was invested, withdrawn, or earned in dividends
@@ -553,16 +582,18 @@ def get_performance_by_year() -> dict:
                      e.g. {"2024": {"BUY": -5000.0, "DIVIDENDS": 120.0, "DEPOSIT": 6000.0}}
     """
     portfolio = _require_portfolio()
-    yearly_data = {}
-    for t in portfolio.getTotalTransactions(Portfolio.TRANSACTION_ALL):
-        year = t.getYear()
+    yearly_data: dict[int, dict[str, int]] = {}
+    for t in portfolio.get_total_transactions(Portfolio.TRANSACTION_ALL):
+        year = t.get_year()
         if year not in yearly_data:
             yearly_data[year] = {}
         trans_type = t.type
-        yearly_data[year][trans_type] = yearly_data[year].get(trans_type, 0) + t.getValue()
+        yearly_data[year][trans_type] = yearly_data[year].get(trans_type, 0) + t.get_value()
 
-    result = {str(year): {t: _to_eur(val) for t, val in types.items()}
-              for year, types in sorted(yearly_data.items())}
+    result = {
+        str(year): {t: _to_eur(val) for t, val in types.items()}
+        for year, types in sorted(yearly_data.items())
+    }
     return {"performance": result}
 
 

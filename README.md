@@ -9,70 +9,37 @@ Python library + MCP server to read Portfolio Performance XML files. Access your
 - MCP server for AI agents (Claude Desktop, Cursor, OpenCode, kiro-cli)
 - Price history tracking
 
-## Installation
-
-```bash
-pip install pyfolio-performance
-```
-
 ## Local Development
 
 ```bash
 # Create virtual environment
-python3 -m venv venv
+python3 -m venv .venv
 
 # Activate
-source venv/bin/activate  # Linux/Mac
-# or: venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/Mac
+# or: .venv\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Test
-python -c "
-from pyfolio_performance import Portfolio, reset
+Run the regression tests:
 
-reset()
-portPerf = Portfolio('your_file.xml')
-
-total_in = sum(a.getBalance() for a in portPerf.getAccounts())
-depot_value = sum(sec.getMostRecentValue() * shares 
-                   for d in portPerf.getDepots() 
-                   for sec, shares in d.getSecurities().items())
-
-print(f'Pay-in: {total_in/100:.2f} EUR')
-print(f'Depot: {depot_value/100:.2f} EUR')
-print(f'P/L: {(depot_value-total_in)/100:.2f} EUR')
-"
-```
-
-## Quick Start
-
-```python
-from pyfolio_performance import Portfolio, reset
-
-reset()  # clear any previous state
-portPerf = Portfolio('your_file.xml')
-
-# Get accounts and depots
-for account in portPerf.getAccounts():
-    print(f"{account.getName()}: {account.getBalance()/100} EUR")
-
-for depot in portPerf.getDepots():
-    for sec, shares in depot.getSecurities().items():
-        print(f"{sec.getName()}: {shares} shares @ {sec.getMostRecentValue()/100} EUR")
+```bash
+python -m pytest
+ruff check .
 ```
 
 ## Portfolio Performance MCP Server
 
 This project includes an MCP (Model Context Protocol) server that exposes your Portfolio Performance data to AI agents for investment analysis and advice.
 
-### Quick Setup (with venv)
+### Quick Setup (native with pyenv/venv)
 
 ```bash
-# 1. Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
+# 1. Use Python 3.12 via pyenv, then create and activate virtual environment
+pyenv install 3.12  # if needed
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/Mac
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -80,6 +47,9 @@ pip install -r requirements.txt
 # 3. Test the server
 python mcp_server.py
 ```
+
+The devcontainer uses `.venv-devcontainer` instead. Activate the matching venv
+before starting `opencode`, because MCP commands use plain `python`.
 
 ### Configuration
 
@@ -118,7 +88,7 @@ Add this to your project `opencode.json`:
   "mcp": {
     "portfolio": {
       "type": "local",
-      "command": ["./venv/bin/python", "mcp_server.py"],
+      "command": ["python", "mcp_server.py"],
       "environment": {
         "PORTFOLIO_FILE": "kommer.xml"
       },
@@ -128,7 +98,8 @@ Add this to your project `opencode.json`:
 }
 ```
 
-Then run opencode from the project directory. The portfolio auto-loads on startup.
+Then activate the native `.venv` or container `.venv-devcontainer` and run
+opencode from the project directory. The portfolio auto-loads on startup.
 
 ## ExtraETF MCP Server
 
@@ -200,9 +171,23 @@ You are a portfolio analyst. Analyze this portfolio across:
 Use the MCP tools to fetch data, then provide actionable insights.
 ```
 
-## Test Files
+## Tests
 
-- **Official test file:** https://github.com/portfolio-performance/portfolio/blob/master/name.abuchen.portfolio.ui/src/name/abuchen/portfolio/ui/parts/kommer.xml
+The test suite includes small XML fixtures copied from the upstream Portfolio
+Performance project under `tests/fixtures/original_project/`. They cover account
+balances, depot holdings, tax/fee transactions, delivery transactions,
+portfolio transfers, single-node XML parsing, and class-level cache resets.
+
+Run:
+
+```bash
+python -m pytest
+ruff check .
+```
+
+`*.xml` files are ignored by default to avoid committing personal portfolio data.
+Only the public fixture XML files under `tests/fixtures/original_project/` are
+explicitly unignored.
 
 ## Docs
 

@@ -1,0 +1,20 @@
+[project]
+name = "pyfolio-performance"
+version = "0.1.0"
+dependencies = [
+    "xmltodict>=1.0.4",
+    "fastmcp>=3.2.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "N", "PL"]
+ignore = ["E501"]
+
+[tool.pyright]
+include = ["mcp_server.py", "extraetf_server.py", "pyfolio_performance", "tests"]
+typeCheckingMode = "basic"
+pythonVersion = "3.12"
