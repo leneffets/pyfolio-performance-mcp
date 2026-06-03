@@ -9,12 +9,6 @@ Python library + MCP server to read Portfolio Performance XML files. Access your
 - MCP server for AI agents (Claude Desktop, Cursor, OpenCode, kiro-cli)
 - Price history tracking
 
-## Installation
-
-```bash
-pip install pyfolio-performance
-```
-
 ## Local Development
 
 ```bash
@@ -28,46 +22,11 @@ source .venv/bin/activate  # Linux/Mac
 # Install dependencies
 pip install -r requirements.txt
 
-# Smoke-test a local Portfolio Performance XML file
-python -c "
-from pyfolio_performance import Portfolio, reset
-
-reset()
-port_perf = Portfolio('your_file.xml')
-
-total_in = sum(a.get_balance() for a in port_perf.get_accounts())
-depot_value = sum(sec.get_most_recent_value() * shares 
-                   for d in port_perf.get_depots() 
-                   for sec, shares in d.get_securities().items())
-
-print(f'Pay-in: {total_in/100:.2f} EUR')
-print(f'Depot: {depot_value/100:.2f} EUR')
-print(f'P/L: {(depot_value-total_in)/100:.2f} EUR')
-"
-```
-
 Run the regression tests:
 
 ```bash
 python -m pytest
 ruff check .
-```
-
-## Quick Start
-
-```python
-from pyfolio_performance import Portfolio, reset
-
-reset()  # clear any previous state
-port_perf = Portfolio('your_file.xml')
-
-# Get accounts and depots
-for account in port_perf.get_accounts():
-    print(f"{account.get_name()}: {account.get_balance()/100} EUR")
-
-for depot in port_perf.get_depots():
-    for sec, shares in depot.get_securities().items():
-        print(f"{sec.get_name()}: {shares} shares @ {sec.get_most_recent_value()/100} EUR")
 ```
 
 ## MCP Server
